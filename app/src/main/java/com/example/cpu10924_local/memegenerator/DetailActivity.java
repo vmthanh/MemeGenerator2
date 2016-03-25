@@ -2,6 +2,8 @@ package com.example.cpu10924_local.memegenerator;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -9,6 +11,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -49,7 +52,8 @@ public class DetailActivity extends Activity {
     float upx = 0;
     float upy = 0;
     private int _xDelta;
-    private int _yDelta;
+    private int _yDeltaTop;
+    private int _yDeltaBottom;
     private Spinner FontSpinnerTop;
     private Spinner FontSpinnerBottom;
     private TextView topTextView;
@@ -60,6 +64,23 @@ public class DetailActivity extends Activity {
     private Button ColorSpinnerTop;
     private Button ColorSpinnerBottom;
     private Button SaveImageButton;
+    private Button AddMemeStickerBtn;
+    private static final int CHOOSE_IMAGE_REQUEST = 1;
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case CHOOSE_IMAGE_REQUEST:
+                if (resultCode == RESULT_OK) {
+                    Uri imageUri = data.getData();
+
+                }
+                break;
+            default:
+                break;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,6 +123,19 @@ public class DetailActivity extends Activity {
         addItemOnSpiner();
         getColorSpinner();
         getSaveButton();
+        getSticketButton();
+    }
+
+    private void getSticketButton()
+    {
+        AddMemeStickerBtn = (Button)findViewById(R.id.AddMemeStickerBtn);
+        AddMemeStickerBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(intent, CHOOSE_IMAGE_REQUEST);
+            }
+        });
     }
 
     private void getSaveButton() {
@@ -132,22 +166,18 @@ public class DetailActivity extends Activity {
         Paint paintText = new Paint();
         paintText.setColor(topTextView.getCurrentTextColor());
         float sizePxOfText = topTextView.getTextSize();
-        //sizePxOfText *= getResources().getDisplayMetrics().density;
         paintText.setTextSize(sizePxOfText);
+        paintText.setTypeface(topTextView.getTypeface());
         RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) topTextView.getLayoutParams();
-        //delta for padding
-        int delta = (int) topTextView.getTop() - layoutParams.topMargin;
-        canvas.drawText(topTextView.getText().toString(), layoutParams.leftMargin, layoutParams.topMargin + delta, paintText);
+        canvas.drawText(topTextView.getText().toString(), layoutParams.leftMargin, layoutParams.topMargin + _yDeltaTop, paintText);
 
         //Draw Bottom Text
         paintText.setColor(bottomTextView.getCurrentTextColor());
         sizePxOfText = bottomTextView.getTextSize();
-        //sizePxOfText *= getResources().getDisplayMetrics().density;
         paintText.setTextSize(sizePxOfText);
+        paintText.setTypeface(bottomTextView.getTypeface());
         layoutParams = (RelativeLayout.LayoutParams) bottomTextView.getLayoutParams();
-        //delta for padding
-        delta = (int) bottomTextView.getTop() - layoutParams.topMargin;
-        canvas.drawText(bottomTextView.getText().toString(), layoutParams.leftMargin, layoutParams.topMargin + delta, paintText);
+        canvas.drawText(bottomTextView.getText().toString(), layoutParams.leftMargin, layoutParams.topMargin + _yDeltaBottom, paintText);
 
     }
     private void drawStickerOnCanvas()
@@ -259,8 +289,14 @@ public class DetailActivity extends Activity {
     }
 
     private void getAddTextView() {
+        Typeface blockFont = Typeface.createFromAsset(getAssets(),"fonts/ufonts.com_impact.ttf");
+
         topTextView = (TextView)findViewById(R.id.TopTextView);
         bottomTextView = (TextView)findViewById(R.id.BottomTextView);
+        topTextView.setTypeface(blockFont);
+        bottomTextView.setTypeface(blockFont);
+        topTextView.setTextColor(0xff000000);
+        bottomTextView.setTextColor(0xff000000);
         topTextView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -270,7 +306,7 @@ public class DetailActivity extends Activity {
                     case MotionEvent.ACTION_DOWN:
                         RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) v.getLayoutParams();
                         _xDelta = X - layoutParams.leftMargin;
-                        _yDelta = Y - layoutParams.topMargin;
+                        _yDeltaTop = Y - layoutParams.topMargin;
                         break;
                     case MotionEvent.ACTION_UP:
                         break;
@@ -281,7 +317,7 @@ public class DetailActivity extends Activity {
                     case MotionEvent.ACTION_MOVE:
                         RelativeLayout.LayoutParams layoutParams1 = (RelativeLayout.LayoutParams) v.getLayoutParams();
                         layoutParams1.leftMargin = X - _xDelta;
-                        layoutParams1.topMargin = Y - _yDelta;
+                        layoutParams1.topMargin = Y - _yDeltaTop;
                         v.setLayoutParams(layoutParams1);
                         break;
                 }
@@ -299,7 +335,7 @@ public class DetailActivity extends Activity {
                     case MotionEvent.ACTION_DOWN:
                         RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) v.getLayoutParams();
                         _xDelta = X - layoutParams.leftMargin;
-                        _yDelta = Y - layoutParams.topMargin;
+                        _yDeltaBottom = Y - layoutParams.topMargin;
                         break;
                     case MotionEvent.ACTION_UP:
                         break;
@@ -311,7 +347,7 @@ public class DetailActivity extends Activity {
                     case MotionEvent.ACTION_MOVE:
                         RelativeLayout.LayoutParams layoutParams1 = (RelativeLayout.LayoutParams) v.getLayoutParams();
                         layoutParams1.leftMargin = X - _xDelta;
-                        layoutParams1.topMargin = Y - _yDelta;
+                        layoutParams1.topMargin = Y - _yDeltaBottom;
                         v.setLayoutParams(layoutParams1);
                         break;
                 }
@@ -389,7 +425,7 @@ public class DetailActivity extends Activity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
-                        topTextView.setTextSize(10);
+                        topTextView.setTextSize(20);
                         break;
                     case "Medium":
                         topTextView.setTextSize(30);
@@ -414,7 +450,7 @@ public class DetailActivity extends Activity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
-                        bottomTextView.setTextSize(10);
+                        bottomTextView.setTextSize(20);
                         break;
                     case "Medium":
                         bottomTextView.setTextSize(30);
@@ -434,34 +470,6 @@ public class DetailActivity extends Activity {
 
             }
         });
-      /*  spinner1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (topTextView != null) {
-                    topTextView.setTextSize(Float.parseFloat(parent.getItemAtPosition(position).toString()));
-                }
 
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-        spinner2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (bottomTextView != null) {
-                    bottomTextView.setTextSize(Float.parseFloat(parent.getItemAtPosition(position).toString()));
-
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-*/
     }
 }

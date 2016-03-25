@@ -1,5 +1,6 @@
 package com.example.cpu10924_local.memegenerator;
 
+import android.app.ActionBar;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -28,16 +29,19 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -55,28 +59,34 @@ import java.util.jar.Manifest;
 
 public class MainActivity extends AppCompatActivity {
 
-
-    ImageView chooseImageView;
-    Button choosePicture;
-    Button savePicture;
-    Bitmap alteredBitmap;
-    Canvas canvas;
-    RelativeLayout relativeLayout;
-    EditText topEditText;
-    EditText bottomEditText;
-    Spinner spinner1;
-    Spinner spinner2;
-    private int _xDelta;
-    private int _yDelta;
-
     //New paramters for recycle view
     private RecyclerView memeList;
-    private  File[] files;
+    private File[] files;
     private static final int CHOOSE_IMAGE_REQUEST = 3;
     private static final int OPEN_CAMERA_REQUEST = 1;
     private final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL = 2;
     private String pictureImagePath = "";
+    private PopupWindow mpopup;
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadData();
+        CustomListAdapter customListAdapter = new CustomListAdapter(files);
+        CustomListAdapter.OnItemClickListener onItemClickListener = new CustomListAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(View view, int position) {
+                Toast.makeText(getApplicationContext(), "Clicked" + files[position].getName(), Toast.LENGTH_SHORT).show();
+                String fileName = files[position].getPath();
+                Intent detailIntent = new Intent(MainActivity.this, DetailActivity.class);
+                detailIntent.putExtra("imagePath", fileName);
+                startActivity(detailIntent);
+            }
+        };
+        customListAdapter.setOnItemClickListener(onItemClickListener);
+        memeList.swapAdapter(customListAdapter, false);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,29 +119,46 @@ public class MainActivity extends AppCompatActivity {
                         // result of the request.
                     }
                 }
-                openBackCamera();
+                View popUpView = getLayoutInflater().inflate(R.layout.popup, null);
+                mpopup = new PopupWindow(popUpView, ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+                mpopup.setAnimationStyle(android.R.style.Animation_Dialog);
+                mpopup.showAtLocation(popUpView, Gravity.BOTTOM, 0, 0);
+                Button ChooseImageBtn = (Button) popUpView.findViewById(R.id.ChooseImageBtn);
+                ChooseImageBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        getChooseImage();
+                    }
+                });
+                Button CameraCaptureBtn = (Button) popUpView.findViewById(R.id.CameraCaptureBtn);
+                CameraCaptureBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        openBackCamera();
+                    }
+                });
+                Button PopupCancle = (Button) popUpView.findViewById(R.id.PopupCancle);
+                PopupCancle.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mpopup.dismiss();
+                    }
+                });
+
             }
         });
 
-       /* relativeLayout = (RelativeLayout) findViewById(R.id.myRelativeLayout);
-        chooseImageView = (ImageView) findViewById(R.id.ChoosenImageView);
-        getAddChoosePictureBtn();
-        getAddSavePictureBtn();
-        getTopEditText();
-        getBottomEditText();
-        addItemOnSpiner();*/
-
-        memeList = (RecyclerView)findViewById(R.id.meme_list);
+        memeList = (RecyclerView) findViewById(R.id.meme_list);
         LinearLayoutManager llm = new LinearLayoutManager(getApplicationContext());
         memeList.setLayoutManager(llm);
         loadData();
         CustomListAdapter customListAdapter = new CustomListAdapter(files);
-        CustomListAdapter.OnItemClickListener onItemClickListener = new CustomListAdapter.OnItemClickListener(){
+        CustomListAdapter.OnItemClickListener onItemClickListener = new CustomListAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View view, int position) {
-                Toast.makeText(getApplicationContext(),"Clicked" +files[position].getName(),Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Clicked" + files[position].getName(), Toast.LENGTH_SHORT).show();
                 String fileName = files[position].getPath();
-                Intent detailIntent = new Intent(MainActivity.this,DetailActivity.class);
+                Intent detailIntent = new Intent(MainActivity.this, DetailActivity.class);
                 detailIntent.putExtra("imagePath", fileName);
                 startActivity(detailIntent);
             }
@@ -140,21 +167,26 @@ public class MainActivity extends AppCompatActivity {
         memeList.setAdapter(customListAdapter);
 
     }
-    private void openBackCamera(){
+
+    private void openBackCamera() {
         String timeStamp = new SimpleDateFormat("yyyMMdd_HHmmss").format(new Date());
-        String imageFileName = timeStamp +".jpg";
+        String imageFileName = timeStamp + ".jpg";
         File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        pictureImagePath = storageDir.getAbsolutePath()+"/Camera/" +imageFileName;
+        pictureImagePath = storageDir.getAbsolutePath() + "/Camera/" + imageFileName;
         File file = new File(pictureImagePath);
         Uri outputFileUri = Uri.fromFile(file);
         Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT,outputFileUri);
-        startActivityForResult(cameraIntent,OPEN_CAMERA_REQUEST);
+        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
+        startActivityForResult(cameraIntent, OPEN_CAMERA_REQUEST);
+    }
+
+    private void getChooseImage() {
+        Intent intent = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(intent, CHOOSE_IMAGE_REQUEST);
     }
 
 
-
-    private void loadData(){
+    private void loadData() {
         if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
                     android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
@@ -180,102 +212,13 @@ public class MainActivity extends AppCompatActivity {
                 .getExternalStorageDirectory()
                 .getAbsolutePath();
 
-        String targetPath = ExternalStorageDirectoryPath +"/DCIM/Camera";
+        String targetPath = ExternalStorageDirectoryPath + "/DCIM/Camera";
         File targetDirector = new File(targetPath);
-        if (targetDirector.listFiles()!=null)
-        {
-            files= targetDirector.listFiles();
+        if (targetDirector.listFiles() != null) {
+            files = targetDirector.listFiles();
             Log.v("Files:", String.valueOf(files.length));
         }
-
-
-        /*for (File f: files){
-            Log.v("Files:",f.getName());
-        }*/
-
-
     }
-
-  /*  private void getBottomEditText() {
-        bottomEditText = (EditText) findViewById(R.id.BottomEditText);
-
-        bottomEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (bottomTextView == null) {
-                    bottomTextView = new TextView(getApplicationContext());
-                    bottomTextView.setText("Bottom Text");
-                    relativeLayout.addView(bottomTextView);
-                }
-
-                bottomTextView.setText(s.toString());
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-
-    }
-
-
-    private void getAddSavePictureBtn() {
-        savePicture = (Button) findViewById(R.id.SavePictureButton);
-        savePicture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (alteredBitmap != null) {
-                    //Set Style for text
-                    Paint paintText = new Paint();
-                    paintText.setColor(Color.BLUE);
-                    float sizePxOfText = Float.parseFloat(spinner1.getSelectedItem().toString());
-                    sizePxOfText *= getResources().getDisplayMetrics().density;
-                    paintText.setTextSize(sizePxOfText);
-                    Log.v("Font size:", spinner1.getSelectedItem().toString());
-                    Rect rectText = new Rect();
-                    paintText.getTextBounds(topTextView.getText().toString(), 0, topTextView.getText().length(), rectText);
-                    RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) topTextView.getLayoutParams();
-                    //delta for padding
-                    int delta = (int) topTextView.getTop() - layoutParams.topMargin + 30;
-                    canvas.drawText(topTextView.getText().toString(), layoutParams.leftMargin, layoutParams.topMargin + delta, paintText);
-                    chooseImageView.invalidate();
-                    //Save image
-                    ContentValues contentValues = new ContentValues(3);
-                    contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, "Draw image");
-                    Uri imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-                    try {
-                        OutputStream imageFileOS = getContentResolver().openOutputStream(imageUri);
-                        alteredBitmap.compress(Bitmap.CompressFormat.JPEG, 90, imageFileOS);
-                        Toast t = Toast.makeText(getApplicationContext(), "Saved!", Toast.LENGTH_SHORT);
-                        t.show();
-                    } catch (Exception e) {
-                        Log.v("Error: ", e.toString());
-                    }
-                }
-            }
-        });
-
-    }
-
-
-    private void getAddChoosePictureBtn() {
-        choosePicture = (Button) findViewById(R.id.ChoosePictureButton);
-        choosePicture.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-
-            }
-        });
-
-    }
-
-  */
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -328,13 +271,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        switch (requestCode)
-        {
+        switch (requestCode) {
             case CHOOSE_IMAGE_REQUEST:
                 if (resultCode == RESULT_OK) {
                     Uri imageUri = data.getData();
-                    Intent detailIntent = new Intent(MainActivity.this,DetailActivity.class);
-                    detailIntent.putExtra("bitmapUri",imageUri);
+                    Intent detailIntent = new Intent(MainActivity.this, DetailActivity.class);
+                    detailIntent.putExtra("bitmapUri", imageUri);
                     startActivity(detailIntent);
                 }
                 break;

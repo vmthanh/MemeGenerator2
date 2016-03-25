@@ -5,7 +5,9 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/RelativeLayoutHolder">
+        android:id="@+id/RelativeLayoutHolder"
+        android:layout_marginLeft="20px">
+
         <ImageView android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/MemeImageView"
@@ -13,18 +15,21 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Top Text"
             android:id="@+id/TopTextView"
-            android:textSize="30sp"
+            android:textSize="50sp"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+
             />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/BottomTextView"
-            android:text="Bottom Text"
-            android:paddingTop="20dp"
-            android:textSize="30sp"
+            android:paddingTop="40dp"
+            android:textSize="50sp"
+            android:textAllCaps="true"
+            android:textStyle="bold"
           />
 
     </RelativeLayout>
