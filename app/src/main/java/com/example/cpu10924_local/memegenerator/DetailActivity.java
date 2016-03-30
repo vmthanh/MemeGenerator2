@@ -1,5 +1,6 @@
 package com.example.cpu10924_local.memegenerator;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -20,16 +21,21 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import org.w3c.dom.Text;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -42,30 +48,15 @@ import yuku.ambilwarna.AmbilWarnaDialog;
  */
 public class DetailActivity extends Activity {
     private Bitmap bmpImage;
-    private Bitmap alteredBitmap;
-    private ImageView MemeImageView;
-    private Canvas canvas;
-    private Paint paint;
-    private Matrix matrix;
-    float downx = 0;
-    float downy = 0;
-    float upx = 0;
-    float upy = 0;
-    private int _xDelta;
-    private int _yDeltaTop;
-    private int _yDeltaBottom;
-    private Spinner FontSpinnerTop;
-    private Spinner FontSpinnerBottom;
-    private TextView topTextView;
-    private TextView bottomTextView;
-    private RelativeLayout RelativeLayoutHolder;
-    private EditText TopEditText;
-    private EditText BottomEditText;
-    private Button ColorSpinnerTop;
-    private Button ColorSpinnerBottom;
+    private MyView MemeImageView;
+    private EditText MemeEditText;
     private Button SaveImageButton;
     private Button AddMemeStickerBtn;
+    private Button AddCaptionBtn;
+    private Spinner FontSpinner;
+    private Button ColorSpinner;
     private static final int CHOOSE_IMAGE_REQUEST = 1;
+    private LinearLayout TextSetting;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -74,7 +65,6 @@ public class DetailActivity extends Activity {
             case CHOOSE_IMAGE_REQUEST:
                 if (resultCode == RESULT_OK) {
                     Uri imageUri = data.getData();
-
                 }
                 break;
             default:
@@ -85,7 +75,7 @@ public class DetailActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.meme_detail);
+        setContentView(R.layout.custom_view);
         Uri imageUri = getIntent().getParcelableExtra("bitmapUri");
         String imagePath = getIntent().getStringExtra("imagePath");
         if (imageUri !=null)
@@ -94,7 +84,7 @@ public class DetailActivity extends Activity {
                 BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                 bmOptions.inJustDecodeBounds = true;
                 bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
-                bmOptions.inSampleSize = calculateInSampleSize(bmOptions,300,300);
+                bmOptions.inSampleSize = calculateInSampleSize(bmOptions,400,400);
                 bmOptions.inJustDecodeBounds = false;
                 bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(
                         imageUri), null, bmOptions);
@@ -115,16 +105,84 @@ public class DetailActivity extends Activity {
             bmpImage = BitmapFactory.decodeFile(imagePath, options);
             getMemeImageView();
         }else {
-            Log.v("Error:","Cannot pass parameter");
+            Log.v("Error:", "Cannot pass parameter");
         }
-        RelativeLayoutHolder = (RelativeLayout)findViewById(R.id.RelativeLayoutHolder);
-        getAddTextView();
-        getEditText();
-        addItemOnSpiner();
-        getColorSpinner();
-        getSaveButton();
-        getSticketButton();
+
+        FontSpinner = (Spinner)findViewById(R.id.FontSpinner);
+        List<String> list = new ArrayList<String>();
+        String[] fontSizeArray = getResources().getStringArray(R.array.font_size_array);
+        for (String s:
+                fontSizeArray) {
+            list.add(s);
+        }
+        ArrayAdapter<String> fontSizeAdapter = new ArrayAdapter<String>(getBaseContext(),android.R.layout.simple_spinner_item,list);
+        fontSizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        FontSpinner.setAdapter(fontSizeAdapter);
+        getAddCaptionBtn();
+
+    /*    getSaveButton();
+        getSticketButton();*/
     }
+    CaptionText captionTextClicked;
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        switch (event.getAction()& MotionEvent.ACTION_MASK)
+        {
+            case MotionEvent.ACTION_DOWN:
+                captionTextClicked =  MemeImageView.getInitLocation(event.getX(), event.getY());
+
+                if (captionTextClicked ==null)
+                {
+                    TextSetting.setVisibility(View.GONE);
+                }
+                else {
+                    TextSetting.setVisibility(View.VISIBLE);
+                    getEditText();
+                    addItemOnSpiner();
+                    getColorSpinner();
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (captionTextClicked !=null)
+                {
+                    float x =event.getX();
+                    float y = event.getY();
+                    MemeImageView.moveObject(x,y);
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+
+                break;
+            default:
+                break;
+        }
+       MemeImageView.invalidate();
+        return true;
+    }
+
+    private void getAddCaptionBtn() {
+        AddCaptionBtn = (Button)findViewById(R.id.AddCaptionBtn);
+        AddCaptionBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
+                TextSetting.setVisibility(View.VISIBLE);
+                final Typeface blockFont = Typeface.createFromAsset(getAssets(), "fonts/ufonts.com_impact.ttf");
+                Paint paintText = new Paint();
+                paintText.setColor(Color.WHITE);
+                paintText.setTextSize(100);
+                paintText.setTypeface(blockFont);
+                CaptionText captionText = new CaptionText("Caption", 50, 100, paintText);
+                MemeImageView.addTextCaption(captionText);
+            }
+        });
+
+    }
+
+
+
+
 
     private void getSticketButton()
     {
@@ -139,11 +197,10 @@ public class DetailActivity extends Activity {
     }
 
     private void getSaveButton() {
-       SaveImageButton = (Button)findViewById(R.id.SaveImageButton);
+      /* SaveImageButton = (Button)findViewById(R.id.SaveImageButton);
         SaveImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                drawTextOnCanvas();
                 //drawStickerOnCanvas();
                 //Save image
                 ContentValues contentValues = new ContentValues(3);
@@ -158,38 +215,17 @@ public class DetailActivity extends Activity {
                     Log.v("Error: ", e.toString());
                 }
             }
-        });
+        });*/
     }
-    private void drawTextOnCanvas()
-    {
-        //Draw Top Text
-        Paint paintText = new Paint();
-        paintText.setColor(topTextView.getCurrentTextColor());
-        float sizePxOfText = topTextView.getTextSize();
-        paintText.setTextSize(sizePxOfText);
-        paintText.setTypeface(topTextView.getTypeface());
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) topTextView.getLayoutParams();
-        canvas.drawText(topTextView.getText().toString(), layoutParams.leftMargin, layoutParams.topMargin + _yDeltaTop, paintText);
 
-        //Draw Bottom Text
-        paintText.setColor(bottomTextView.getCurrentTextColor());
-        sizePxOfText = bottomTextView.getTextSize();
-        paintText.setTextSize(sizePxOfText);
-        paintText.setTypeface(bottomTextView.getTypeface());
-        layoutParams = (RelativeLayout.LayoutParams) bottomTextView.getLayoutParams();
-        canvas.drawText(bottomTextView.getText().toString(), layoutParams.leftMargin, layoutParams.topMargin + _yDeltaBottom, paintText);
-
-    }
     private void drawStickerOnCanvas()
     {
 
     }
 
     private void getColorSpinner() {
-        final Paint colorPickerPaint = new Paint();
-        ColorSpinnerTop =(Button)findViewById(R.id.ColorSpinnerTop);
-        ColorSpinnerBottom = (Button)findViewById(R.id.ColorSpinnerBottom);
-        ColorSpinnerTop.setOnClickListener(new View.OnClickListener() {
+        ColorSpinner = (Button)findViewById(R.id.ColorSpinner);
+        ColorSpinner.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 int initialColor = 0xff000000;
@@ -201,30 +237,15 @@ public class DetailActivity extends Activity {
 
                     @Override
                     public void onOk(AmbilWarnaDialog dialog, int color) {
-                       topTextView.setTextColor(color);
+                        captionTextClicked.paint.setColor(color);
+                        MemeImageView.invalidate();
                     }
                 });
                 dialog.show();
             }
         });
-        ColorSpinnerBottom.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int initialColor = 0xff000000; //black color
-                AmbilWarnaDialog dialog =new AmbilWarnaDialog(DetailActivity.this, initialColor, new AmbilWarnaDialog.OnAmbilWarnaListener() {
-                    @Override
-                    public void onCancel(AmbilWarnaDialog dialog) {
 
-                    }
 
-                    @Override
-                    public void onOk(AmbilWarnaDialog dialog, int color) {
-                       bottomTextView.setTextColor(color);
-                    }
-                });
-                dialog.show();
-            }
-        });
     }
 
     private int calculateInSampleSize(BitmapFactory.Options options,int Width, int Height)
@@ -250,9 +271,9 @@ public class DetailActivity extends Activity {
     }
 
     private void getEditText() {
-        TopEditText = (EditText)findViewById(R.id.TopMemeEditText);
-        BottomEditText = (EditText)findViewById(R.id.BottomMemeEditText);
-        TopEditText.addTextChangedListener(new TextWatcher() {
+        MemeEditText = (EditText)findViewById(R.id.MemeEditText);
+        MemeEditText.setText(captionTextClicked.content);
+        MemeEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -260,7 +281,8 @@ public class DetailActivity extends Activity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                topTextView.setText(s.toString());
+                captionTextClicked.content = s.toString();
+                MemeImageView.invalidate();
             }
 
             @Override
@@ -268,99 +290,15 @@ public class DetailActivity extends Activity {
 
             }
         });
-
-        BottomEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                bottomTextView.setText(s.toString());
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-
     }
 
-    private void getAddTextView() {
-        Typeface blockFont = Typeface.createFromAsset(getAssets(),"fonts/ufonts.com_impact.ttf");
-
-        topTextView = (TextView)findViewById(R.id.TopTextView);
-        bottomTextView = (TextView)findViewById(R.id.BottomTextView);
-        topTextView.setTypeface(blockFont);
-        bottomTextView.setTypeface(blockFont);
-        topTextView.setTextColor(0xff000000);
-        bottomTextView.setTextColor(0xff000000);
-        topTextView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                final int X = (int) event.getRawX();
-                final int Y = (int) event.getRawY();
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) v.getLayoutParams();
-                        _xDelta = X - layoutParams.leftMargin;
-                        _yDeltaTop = Y - layoutParams.topMargin;
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        break;
-                    case MotionEvent.ACTION_POINTER_UP:
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        RelativeLayout.LayoutParams layoutParams1 = (RelativeLayout.LayoutParams) v.getLayoutParams();
-                        layoutParams1.leftMargin = X - _xDelta;
-                        layoutParams1.topMargin = Y - _yDeltaTop;
-                        v.setLayoutParams(layoutParams1);
-                        break;
-                }
-                RelativeLayoutHolder.invalidate();
-                return true;
-            }
-        });
-
-        bottomTextView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                final int X = (int) event.getRawX();
-                final int Y = (int) event.getRawY();
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) v.getLayoutParams();
-                        _xDelta = X - layoutParams.leftMargin;
-                        _yDeltaBottom = Y - layoutParams.topMargin;
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-
-                        break;
-                    case MotionEvent.ACTION_POINTER_UP:
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        RelativeLayout.LayoutParams layoutParams1 = (RelativeLayout.LayoutParams) v.getLayoutParams();
-                        layoutParams1.leftMargin = X - _xDelta;
-                        layoutParams1.topMargin = Y - _yDeltaBottom;
-                        v.setLayoutParams(layoutParams1);
-                        break;
-                }
-                RelativeLayoutHolder.invalidate();
-                return true;
-            }
-        });
-    }
 
     private void getMemeImageView() {
-        MemeImageView = (ImageView)findViewById(R.id.MemeImageView);
-        getLoadDrawOnBitmap();
-        MemeImageView.setOnTouchListener(new View.OnTouchListener() {
+        MemeImageView = (MyView)findViewById(R.id.myview);
+        MemeImageView.setCanvasBitmap(bmpImage);
+        //getLoadDrawOnBitmap();
+
+       /* MemeImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 int action = event.getAction();
@@ -390,54 +328,46 @@ public class DetailActivity extends Activity {
                 }
                 return true;
             }
-        });
+        });*/
 
     }
 
-    private void getLoadDrawOnBitmap() {
-        alteredBitmap = Bitmap.createBitmap(bmpImage.getWidth(), bmpImage.getHeight(), bmpImage.getConfig());
-        //Write bitmap to canvas
-        canvas = new Canvas(alteredBitmap);
-        paint = new Paint();
-        paint.setColor(Color.GREEN);
-        paint.setStrokeWidth(5);
-        matrix = new Matrix();
-        canvas.drawBitmap(bmpImage, matrix, paint);
-        MemeImageView.setImageBitmap(alteredBitmap);
-    }
+
 
     public void addItemOnSpiner() {
-        FontSpinnerTop = (Spinner)findViewById(R.id.FontSpinnerTop);
-        FontSpinnerBottom = (Spinner)findViewById(R.id.FontSpinnerBottom);
-        List<String> list = new ArrayList<String>();
-        String[] fontSizeArray = getResources().getStringArray(R.array.font_size_array);
-        for (String s:
-                fontSizeArray) {
-            list.add(s);
+        switch ((int)captionTextClicked.paint.getTextSize())
+        {
+            case 100:
+                FontSpinner.setSelection(0);
+                break;
+            case 200:
+                FontSpinner.setSelection(1);
+                break;
+            case 300:
+                FontSpinner.setSelection(2);
+                break;
+            default:
+                break;
         }
-
-        ArrayAdapter<String> fontSizeAdapter = new ArrayAdapter<String>(getBaseContext(),android.R.layout.simple_spinner_item,list);
-        fontSizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        FontSpinnerTop.setAdapter(fontSizeAdapter);
-        FontSpinnerBottom.setAdapter(fontSizeAdapter);
-        FontSpinnerTop.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        FontSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
-                        topTextView.setTextSize(20);
+                        captionTextClicked.paint.setTextSize(100);
                         break;
                     case "Medium":
-                        topTextView.setTextSize(30);
+                        captionTextClicked.paint.setTextSize(200);
                         break;
                     case "Large":
-                        topTextView.setTextSize(50);
+                        captionTextClicked.paint.setTextSize(300);
                         break;
                     default:
-                        topTextView.setTextSize(30);
+
                         break;
 
                 }
+                MemeImageView.invalidate();
             }
 
             @Override
@@ -445,31 +375,8 @@ public class DetailActivity extends Activity {
 
             }
         });
-        FontSpinnerBottom.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (String.valueOf(parent.getItemAtPosition(position))) {
-                    case "Small":
-                        bottomTextView.setTextSize(20);
-                        break;
-                    case "Medium":
-                        bottomTextView.setTextSize(30);
-                        break;
-                    case "Large":
-                        bottomTextView.setTextSize(50);
-                        break;
-                    default:
-                        bottomTextView.setTextSize(30);
-                        break;
 
-                }
-            }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
 
     }
 }

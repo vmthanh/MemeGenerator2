@@ -4,8 +4,8 @@
     <string name="action_settings">Settings</string>
     <string name="font_size_promp">Size</string>
     <string-array name="font_size_array">
-       <item>Large</item>
+       <item>Small</item>
         <item>Medium</item>
-        <item>Small</item>
+        <item>Large</item>
     </string-array>
 </resources>
