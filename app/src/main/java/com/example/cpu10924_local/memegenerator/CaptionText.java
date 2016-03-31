@@ -10,12 +10,13 @@ public class CaptionText {
     public float x;
     public float y;
     public Paint paint;
-    public CaptionText(String content,float x, float y,Paint paint)
+    public Paint strokepaint;
+    public CaptionText(String content,float x, float y,Paint paint,Paint strokepaint)
     {
         this.content = content;
         this.x = x;
         this.y = y;
         this.paint = paint;
-
+        this.strokepaint = strokepaint;
     }
 }

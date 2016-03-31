@@ -173,7 +173,12 @@ public class DetailActivity extends Activity {
                 paintText.setColor(Color.WHITE);
                 paintText.setTextSize(100);
                 paintText.setTypeface(blockFont);
-                CaptionText captionText = new CaptionText("Caption", 50, 100, paintText);
+
+                Paint strokePaint = new Paint(paintText);
+                strokePaint.setStyle(Paint.Style.STROKE);
+                strokePaint.setStrokeWidth(20);
+                strokePaint.setColor(Color.BLACK);
+                CaptionText captionText = new CaptionText("Caption", 50, 100, paintText,strokePaint);
                 MemeImageView.addTextCaption(captionText);
             }
         });
@@ -355,12 +360,24 @@ public class DetailActivity extends Activity {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
                         captionTextClicked.paint.setTextSize(100);
+                        captionTextClicked.strokepaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokepaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokepaint.setStrokeWidth(20);
+                        captionTextClicked.strokepaint.setColor(Color.BLACK);
                         break;
                     case "Medium":
                         captionTextClicked.paint.setTextSize(200);
+                        captionTextClicked.strokepaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokepaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokepaint.setStrokeWidth(20);
+                        captionTextClicked.strokepaint.setColor(Color.BLACK);
                         break;
                     case "Large":
                         captionTextClicked.paint.setTextSize(300);
+                        captionTextClicked.strokepaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokepaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokepaint.setStrokeWidth(20);
+                        captionTextClicked.strokepaint.setColor(Color.BLACK);
                         break;
                     default:
 

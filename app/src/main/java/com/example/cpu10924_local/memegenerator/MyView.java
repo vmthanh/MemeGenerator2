@@ -21,32 +21,24 @@ import java.util.List;
  */
 public class MyView extends View {
     private Bitmap bmpImage;
-    private Bitmap resizedBmp;
     private Matrix matrix;
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
-    private Paint paintText;
-    private boolean isClickObject;
-    private boolean isMoving;
-    private int indexClickText;
-    private int initX;
-    private int initY;
+    private int indexClickText = -1;
+    private float initX;
+    private float initY;
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
         canvas.drawBitmap(bmpImage, 0, 0, null);
-        for (CaptionText captionText:captionTextList
-             ) {
-
-            Paint strokePaint = new Paint(captionText.paint);
-            strokePaint.setStyle(Paint.Style.STROKE);
-            strokePaint.setStrokeWidth(10);
-            strokePaint.setColor(Color.BLACK);
-            canvas.drawText(captionText.content.toUpperCase(), captionText.x, captionText.y, strokePaint);
-            canvas.drawText(captionText.content.toUpperCase(), captionText.x, captionText.y, captionText.paint);
+        for (int i=0; i<captionTextList.size();i++)
+        {
+            canvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).strokepaint);
+            canvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
 
         }
+
 
     }
 
@@ -94,39 +86,50 @@ public class MyView extends View {
         invalidate();
     }
 
-    public CaptionText getInitLocation(float initX,float initY)
+    public CaptionText getInitLocation(float locX,float locY)
     {
         for(int i=0;i<captionTextList.size();i++)
         {
 
             Rect bound = new Rect();
-             captionTextList.get(i).paint.getTextBounds(captionTextList.get(i).content,0,captionTextList.get(i).content.length(),bound);
-            float rangeY =bound.height()+captionTextList.get(i).y;
-            float rangeX = bound.width() +captionTextList.get(i).x +10;
-            if (captionTextList.get(i).y <= initY && initY<=rangeY)
+            captionTextList.get(i).paint.getTextBounds(captionTextList.get(i).content,0,captionTextList.get(i).content.length(),bound);
+            float padding = 10;
+            float left = captionTextList.get(i).x - padding;
+            float top = captionTextList.get(i).y -padding;
+            float right = captionTextList.get(i).x + bound.width() +padding;
+            float bottom = captionTextList.get(i).y + bound.height() +padding;
+
+            if (top <= locY && locY <=bottom)
             {
-                if(captionTextList.get(i).x<=initX && initX <= rangeX)
+                if(left <=locX && locX <=right)
                 {
+                    initX = locX;
+                    initY = locY;
                     indexClickText = i;
                     return captionTextList.get(i);
                 }
-
             }
 
         }
+        indexClickText = -1;
         return null;
 
     }
     public void moveObject(float newX, float newY)
     {
-        Rect bound = new Rect();
-        captionTextList.get(indexClickText).paint.getTextBounds(captionTextList.get(indexClickText).content,0,captionTextList.get(indexClickText).content.length(),bound);
-            CaptionText updateCaptionText = captionTextList.get(indexClickText);
-                updateCaptionText.x =newX-(bound.height()/2);
-                updateCaptionText.y =newY;
-        captionTextList.set(indexClickText, updateCaptionText);
-            //invalidate();
+        if (indexClickText !=-1)
+        {
 
+            CaptionText updateCaptionText = captionTextList.get(indexClickText);
+            float deltaX = newX - initX;
+            float deltaY = newY - initY;
+            updateCaptionText.x +=deltaX;
+            updateCaptionText.y +=deltaY;
+            initX = newX;
+            initY = newY;
+            captionTextList.set(indexClickText, updateCaptionText);
+
+        }
 
     }
 
