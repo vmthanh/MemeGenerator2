@@ -65,11 +65,28 @@ public class DetailActivity extends Activity {
             case CHOOSE_IMAGE_REQUEST:
                 if (resultCode == RESULT_OK) {
                     Uri imageUri = data.getData();
+                    try{
+                        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                        bmOptions.inJustDecodeBounds = true;
+                        Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
+                        bmOptions.inSampleSize = calculateInSampleSize(bmOptions,250,250);
+                        bmOptions.inJustDecodeBounds = false;
+                        bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
+                        addMemeSticker(bmpSticker);
+                    }catch (Exception e){
+
+                    }
                 }
                 break;
             default:
                 break;
         }
+    }
+
+    private void addMemeSticker(Bitmap bitmapSticker)
+    {
+        Sticker newSticker = new Sticker(bitmapSticker,50,100,1);
+        MemeImageView.setSticker(newSticker);
     }
 
     @Override
@@ -120,8 +137,8 @@ public class DetailActivity extends Activity {
         FontSpinner.setAdapter(fontSizeAdapter);
         getAddCaptionBtn();
 
-    /*    getSaveButton();
-        getSticketButton();*/
+    //    getSaveButton();
+        getSticketButton();
     }
     CaptionText captionTextClicked;
     @Override

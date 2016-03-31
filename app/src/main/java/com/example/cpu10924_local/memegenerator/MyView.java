@@ -23,6 +23,7 @@ public class MyView extends View {
     private Bitmap bmpImage;
     private Matrix matrix;
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
+    public List<Sticker> stickerList = new ArrayList<Sticker>();
     private int indexClickText = -1;
     private float initX;
     private float initY;
@@ -34,12 +35,18 @@ public class MyView extends View {
         super.onDraw(canvas);
 
         canvas.drawBitmap(bmpImage, 0, 0, null);
+        //Draw text
         for (int i=0; i<captionTextList.size();i++)
         {
 
             canvas.drawText(captionTextList.get(i).content.toUpperCase(),captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).strokepaint);
             canvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).paint);
 
+        }
+        //Draw sticker
+        for(int i=0; i<stickerList.size();i++)
+        {
+            canvas.drawBitmap(stickerList.get(i).bitmap,stickerList.get(i).x,stickerList.get(i).y,null);
         }
 
 
@@ -78,6 +85,11 @@ public class MyView extends View {
     {
         bmpImage = bitmap;
 
+    }
+    public void setSticker(Sticker sticker)
+    {
+        sticker.bitmap = getResizedBitmap(sticker.bitmap,300,300);
+        stickerList.add(sticker);
     }
     public void addTextCaption(CaptionText textCaption)
     {
