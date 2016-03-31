@@ -302,7 +302,6 @@ public class DetailActivity extends Activity {
         MemeImageView = (MyView)findViewById(R.id.myview);
         MemeImageView.setCanvasBitmap(bmpImage);
         //getLoadDrawOnBitmap();
-
        /* MemeImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {

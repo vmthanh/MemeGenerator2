@@ -26,6 +26,8 @@ public class MyView extends View {
     private int indexClickText = -1;
     private float initX;
     private float initY;
+    private int imageViewWidth;
+    private int imageViewHeight;
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -34,8 +36,9 @@ public class MyView extends View {
         canvas.drawBitmap(bmpImage, 0, 0, null);
         for (int i=0; i<captionTextList.size();i++)
         {
-            canvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).strokepaint);
-            canvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
+
+            canvas.drawText(captionTextList.get(i).content.toUpperCase(),captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).strokepaint);
+            canvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).paint);
 
         }
 
@@ -56,13 +59,9 @@ public class MyView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        int newWidth = MeasureSpec.getSize(widthMeasureSpec);
-        int newHeight = MeasureSpec.getSize(heightMeasureSpec);
-        bmpImage = getResizedBitmap(bmpImage,newWidth, newHeight);
-        for(CaptionText captionText:captionTextList)
-        {
-            captionText.x = newWidth/4;
-        }
+        imageViewWidth = MeasureSpec.getSize(widthMeasureSpec);
+        imageViewHeight = MeasureSpec.getSize(heightMeasureSpec);
+        bmpImage = getResizedBitmap(bmpImage,imageViewWidth, imageViewHeight);
 
     }
 
@@ -82,6 +81,25 @@ public class MyView extends View {
     }
     public void addTextCaption(CaptionText textCaption)
     {
+        Rect bound = new Rect();
+       textCaption.paint.getTextBounds(textCaption.content,0,textCaption.content.length(),bound);
+        //Move text to center
+        textCaption.x = imageViewWidth /2 -bound.width()/2;
+        switch (captionTextList.size())
+        {
+            //Move text to bottom
+            case 1:
+                textCaption.y = imageViewHeight;
+                break;
+            //Move text to middle
+            case 2:
+                textCaption.y = imageViewHeight/2 - bound.height()/2;
+                break;
+            //Otherwise, move up
+            default:
+                break;
+
+        }
         captionTextList.add(textCaption);
         invalidate();
     }
