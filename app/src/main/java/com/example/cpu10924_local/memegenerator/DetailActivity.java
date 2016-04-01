@@ -18,8 +18,10 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.FloatMath;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
@@ -135,66 +137,33 @@ public class DetailActivity extends Activity {
         ArrayAdapter<String> fontSizeAdapter = new ArrayAdapter<String>(getBaseContext(),android.R.layout.simple_spinner_item,list);
         fontSizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         FontSpinner.setAdapter(fontSizeAdapter);
+        TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
         getAddCaptionBtn();
 
     //    getSaveButton();
         getSticketButton();
     }
-    CaptionText captionTextClicked;
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
 
-        switch (event.getAction()& MotionEvent.ACTION_MASK)
-        {
-            case MotionEvent.ACTION_DOWN:
-                captionTextClicked =  MemeImageView.getInitLocation(event.getX(), event.getY());
-
-                if (captionTextClicked ==null)
-                {
-                    TextSetting.setVisibility(View.GONE);
-                }
-                else {
-                    TextSetting.setVisibility(View.VISIBLE);
-                    getEditText();
-                    addItemOnSpiner();
-                    getColorSpinner();
-                }
-                break;
-            case MotionEvent.ACTION_MOVE:
-                if (captionTextClicked !=null)
-                {
-                    float x =event.getX();
-                    float y = event.getY();
-                    MemeImageView.moveObject(x,y);
-                }
-                break;
-            case MotionEvent.ACTION_UP:
-
-                break;
-            default:
-                break;
-        }
-       MemeImageView.invalidate();
-        return true;
-    }
 
     private void getAddCaptionBtn() {
         AddCaptionBtn = (Button)findViewById(R.id.AddCaptionBtn);
         AddCaptionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
+
                 TextSetting.setVisibility(View.VISIBLE);
                 final Typeface blockFont = Typeface.createFromAsset(getAssets(), "fonts/ufonts.com_impact.ttf");
                 Paint paintText = new Paint();
                 paintText.setColor(Color.WHITE);
                 paintText.setTextSize(100);
                 paintText.setTypeface(blockFont);
+                paintText.setAntiAlias(true);
 
                 Paint strokePaint = new Paint(paintText);
                 strokePaint.setStyle(Paint.Style.STROKE);
                 strokePaint.setStrokeWidth(20);
                 strokePaint.setColor(Color.BLACK);
+                strokePaint.setAntiAlias(true);
                 CaptionText captionText = new CaptionText("Caption", 50, 100, paintText,strokePaint);
                 MemeImageView.addTextCaption(captionText);
             }
@@ -314,39 +283,94 @@ public class DetailActivity extends Activity {
         });
     }
 
-
+    CaptionText captionTextClicked;
+    Sticker stickerClicked;
+    private float mScaleFactor = 1.f;
+    static final int NONE = 100;
+    static final int DRAG = 200;
+    static final int ZOOM = 300;
+    int mode = NONE;
+    float oldDist = 1f;
     private void getMemeImageView() {
         MemeImageView = (MyView)findViewById(R.id.myview);
         MemeImageView.setCanvasBitmap(bmpImage);
-        //getLoadDrawOnBitmap();
-       /* MemeImageView.setOnTouchListener(new View.OnTouchListener() {
+        MemeImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                int action = event.getAction();
-                switch (action) {
+                // MemeImageView.mScaleDetector.onTouchEvent(event);
+                switch (event.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
-                        downx = event.getX();
-                        downy = event.getY();
+                        mode = DRAG;
+                        captionTextClicked = MemeImageView.getInitTextLocation(event.getRawX(), event.getRawY());
+                        if (captionTextClicked == null) {
+                            TextSetting.setVisibility(View.GONE);
+                            stickerClicked = MemeImageView.getInitStickerLocation(event.getRawX(), event.getRawY());
+                            if (stickerClicked != null) {
+
+                            }
+                        } else {
+                            TextSetting.setVisibility(View.VISIBLE);
+                            getEditText();
+                            addItemOnSpiner();
+                            getColorSpinner();
+                        }
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        upx = event.getX();
-                        upy = event.getY();
-                        canvas.drawLine(downx, downy, upx, upy, paint);
-                        MemeImageView.invalidate();
-                        downx = upx;
-                        downy = upy;
+                        if (mode == DRAG)
+                        {
+                            if (captionTextClicked != null) {
+                                float x = event.getRawX();
+                                float y = event.getRawY();
+                                MemeImageView.moveObject(x, y);
+                            } else if (stickerClicked != null) {
+                                float x = event.getRawX();
+                                float y = event.getRawY();
+                                MemeImageView.moveObject(x, y);
+                            }
+                        }else if (mode == ZOOM)
+                        {
+                           /* float x = event.getX(0) - event.getX(1);
+                            float y = event.getY(0) - event.getY(1);
+                            double res = (x*x) + (y*y);
+                            float newDist = (float)Math.sqrt(res);
+                            if (newDist >3f)
+                            {
+                                mScaleFactor = newDist/oldDist;
+                                mScaleFactor = Math.max(1f, Math.min(mScaleFactor, 2.0f));
+                                MemeImageView.scaleSticker(mScaleFactor);
+                            }*/
+                        }
+
                         break;
                     case MotionEvent.ACTION_UP:
-                        upx = event.getX();
-                        upy = event.getY();
-                        canvas.drawLine(downx, downy, upx, upy, paint);
-                        MemeImageView.invalidate();
+                    case MotionEvent.ACTION_POINTER_UP:
+                        mode = NONE;
                         break;
-                    case MotionEvent.ACTION_CANCEL:
-                        break;
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                        float x = event.getX(0) - event.getX(1);
+                        float y = event.getY(0) - event.getY(1);
+                        double res = (x*x) + (y*y);
+                        oldDist =(float)Math.sqrt(res);
+                        if (oldDist > 3f)
+                        {
+                            mode = ZOOM;
+                        }
+
                     default:
                         break;
                 }
+                MemeImageView.invalidate();
+                return true;
+            }
+        });
+       /* MemeImageView.mScaleDetector = new ScaleGestureDetector(getApplicationContext(),new ScaleGestureDetector.SimpleOnScaleGestureListener(){
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                mScaleFactor *= detector.getScaleFactor();
+                mScaleFactor = Math.max(1f, Math.min(mScaleFactor, 3.0f));
+                Log.v("Get factor",String.valueOf(mScaleFactor));
+                MemeImageView.scaleSticker(mScaleFactor);
+                MemeImageView.invalidate();
                 return true;
             }
         });*/

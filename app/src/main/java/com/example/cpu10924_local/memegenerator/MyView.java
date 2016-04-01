@@ -2,6 +2,7 @@ package com.example.cpu10924_local.memegenerator;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
@@ -10,6 +11,9 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.util.Log;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Toast;
 
@@ -25,10 +29,12 @@ public class MyView extends View {
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
     public List<Sticker> stickerList = new ArrayList<Sticker>();
     private int indexClickText = -1;
+    private int indexClickSticker = -1;
     private float initX;
     private float initY;
     private int imageViewWidth;
     private int imageViewHeight;
+    public ScaleGestureDetector mScaleDetector;
 
     @Override
     protected void onDraw(Canvas canvas) {
@@ -75,8 +81,10 @@ public class MyView extends View {
     public MyView(Context context,AttributeSet attrs)
     {
         super(context, attrs);
+
         init();
     }
+
     private void init()
     {
         matrix = new Matrix();
@@ -91,6 +99,7 @@ public class MyView extends View {
         sticker.bitmap = getResizedBitmap(sticker.bitmap,300,300);
         stickerList.add(sticker);
     }
+
     public void addTextCaption(CaptionText textCaption)
     {
         Rect bound = new Rect();
@@ -116,7 +125,9 @@ public class MyView extends View {
         invalidate();
     }
 
-    public CaptionText getInitLocation(float locX,float locY)
+
+
+    public CaptionText getInitTextLocation(float locX,float locY)
     {
         for(int i=0;i<captionTextList.size();i++)
         {
@@ -145,6 +156,31 @@ public class MyView extends View {
         return null;
 
     }
+
+    public Sticker getInitStickerLocation(float locX, float locY)
+    {
+        for(int i=0; i<stickerList.size();++i)
+        {
+            Bitmap img = stickerList.get(i).bitmap;
+            float padding = 10;
+            float left = stickerList.get(i).x - padding;
+            float right = stickerList.get(i).x + img.getWidth() + padding;
+            float top = stickerList.get(i).y - padding;
+            float bottom = stickerList.get(i).y + img.getHeight() + padding;
+            if (top <= locY && locY <= bottom)
+            {
+                if (left  <= locX && locX <= right)
+                {
+                    initX = locX;
+                    initY = locY;
+                    indexClickSticker =  i;
+                    return stickerList.get(i);
+                }
+            }
+        }
+        indexClickSticker = -1;
+        return  null;
+    }
     public void moveObject(float newX, float newY)
     {
         if (indexClickText !=-1)
@@ -160,7 +196,68 @@ public class MyView extends View {
             captionTextList.set(indexClickText, updateCaptionText);
 
         }
+        if (indexClickSticker !=-1)
+        {
+            Sticker updateSticker = stickerList.get(indexClickSticker);
+            float deltaX = newX - initX;
+            float deltaY = newY - initY;
+            updateSticker.x +=deltaX;
+            updateSticker.y +=deltaY;
+            initX = newX;
+            initY = newY;
+            stickerList.set(indexClickSticker,updateSticker);
+        }
 
+    }
+
+    public void scaleSticker(float mScaleFactor)
+    {
+        if (indexClickSticker != -1)
+        {
+            Sticker updateSticker= stickerList.get(indexClickSticker);
+            Bitmap bmp = updateSticker.bitmap;
+
+            int width = bmp.getWidth();
+            int height = bmp.getHeight();
+            int newWidth;
+            int newHeight;
+            if (mScaleFactor > 1)
+            {
+               newWidth = (int)(width*mScaleFactor);
+               newHeight = (int)(height*mScaleFactor);
+            }
+            else{
+                 newWidth = (int)(width/mScaleFactor);
+                newHeight = (int)(height/mScaleFactor);
+            }
+
+
+            bmp = getResizedBitmap(bmp,newWidth,newHeight);
+            updateSticker.bitmap = bmp;
+            stickerList.set(indexClickSticker,updateSticker);
+        }
+    }
+
+    private int calculateInSampleSize(BitmapFactory.Options options,int Width, int Height)
+    {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > Height || width > Width) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) > Height
+                    && (halfWidth / inSampleSize) > Width) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
     }
 
 }
