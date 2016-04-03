@@ -1,5 +1,6 @@
 package com.example.cpu10924_local.memegenerator;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -7,9 +8,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -17,6 +21,7 @@ import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.widget.Toast;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,27 +39,33 @@ public class MyView extends View {
     private float initY;
     private int imageViewWidth;
     private int imageViewHeight;
-    public ScaleGestureDetector mScaleDetector;
+    private Bitmap saveBitmap;
+    private Canvas myCanvas;
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        canvas.drawBitmap(bmpImage, 0, 0, null);
+
+        myCanvas.drawBitmap(bmpImage, 0, 0, null);
         //Draw text
         for (int i=0; i<captionTextList.size();i++)
         {
 
-            canvas.drawText(captionTextList.get(i).content.toUpperCase(),captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).strokepaint);
-            canvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).paint);
+            myCanvas.drawText(captionTextList.get(i).content.toUpperCase(),captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).strokepaint);
+            myCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).paint);
 
         }
+
         //Draw sticker
         for(int i=0; i<stickerList.size();i++)
         {
-            canvas.drawBitmap(stickerList.get(i).bitmap,stickerList.get(i).x,stickerList.get(i).y,null);
+            myCanvas.save();
+            myCanvas.setMatrix(stickerList.get(i).matrix);
+           stickerList.get(i).drawable.draw(myCanvas);
+            myCanvas.restore();
         }
-
+        canvas.drawBitmap(saveBitmap,0,0,null);
 
     }
 
@@ -62,9 +73,6 @@ public class MyView extends View {
     {
         int width = bmpImage.getWidth();
         int height = bmpImage.getHeight();
-        float scaleWidth = ((float)newWidth)/width;
-        float scaleHeight = ((float)newHeight)/height;
-        matrix.postScale(scaleWidth, scaleHeight);
         return Bitmap.createScaledBitmap(bmp,newWidth,newWidth,false);
     }
 
@@ -74,7 +82,10 @@ public class MyView extends View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         imageViewWidth = MeasureSpec.getSize(widthMeasureSpec);
         imageViewHeight = MeasureSpec.getSize(heightMeasureSpec);
-        bmpImage = getResizedBitmap(bmpImage,imageViewWidth, imageViewHeight);
+        bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
+        saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.ARGB_8888);
+         myCanvas = new Canvas(saveBitmap);
+
 
     }
 
@@ -88,6 +99,7 @@ public class MyView extends View {
     private void init()
     {
         matrix = new Matrix();
+
     }
     public void setCanvasBitmap(Bitmap bitmap)
     {
@@ -97,6 +109,8 @@ public class MyView extends View {
     public void setSticker(Sticker sticker)
     {
         sticker.bitmap = getResizedBitmap(sticker.bitmap,300,300);
+        sticker.matrix.setTranslate(sticker.x, sticker.y);
+        sticker.drawable.setBounds(0, 0, sticker.bitmap.getWidth(), sticker.bitmap.getHeight());
         stickerList.add(sticker);
     }
 
@@ -162,7 +176,7 @@ public class MyView extends View {
         for(int i=0; i<stickerList.size();++i)
         {
             Bitmap img = stickerList.get(i).bitmap;
-            float padding = 10;
+            float padding = 50;
             float left = stickerList.get(i).x - padding;
             float right = stickerList.get(i).x + img.getWidth() + padding;
             float top = stickerList.get(i).y - padding;
@@ -201,63 +215,50 @@ public class MyView extends View {
             Sticker updateSticker = stickerList.get(indexClickSticker);
             float deltaX = newX - initX;
             float deltaY = newY - initY;
+
             updateSticker.x +=deltaX;
             updateSticker.y +=deltaY;
+            updateSticker.matrix.postTranslate(deltaX,deltaY);
             initX = newX;
             initY = newY;
-            stickerList.set(indexClickSticker,updateSticker);
+            stickerList.set(indexClickSticker, updateSticker);
         }
 
     }
 
-    public void scaleSticker(float mScaleFactor)
+    public void scaleSticker(float mScaleFactor,float mFocusX, float mFocusY)
     {
+
         if (indexClickSticker != -1)
         {
             Sticker updateSticker= stickerList.get(indexClickSticker);
-            Bitmap bmp = updateSticker.bitmap;
-
-            int width = bmp.getWidth();
-            int height = bmp.getHeight();
-            int newWidth;
-            int newHeight;
-            if (mScaleFactor > 1)
+            float newWidth = updateSticker.bitmap.getWidth()*mScaleFactor;
+            float newHeigt = updateSticker.bitmap.getHeight()*mScaleFactor;
+            if(newWidth >100 && newHeigt >100)
             {
-               newWidth = (int)(width*mScaleFactor);
-               newHeight = (int)(height*mScaleFactor);
+                if (newWidth <1200 && newHeigt <1200) {
+                    updateSticker.matrix.postScale(mScaleFactor, mScaleFactor, updateSticker.x, updateSticker.y);
+                    updateSticker.bitmap = getResizedBitmap(updateSticker.bitmap, (int) newWidth, (int) newHeigt);
+                }
             }
-            else{
-                 newWidth = (int)(width/mScaleFactor);
-                newHeight = (int)(height/mScaleFactor);
-            }
-
-
-            bmp = getResizedBitmap(bmp,newWidth,newHeight);
-            updateSticker.bitmap = bmp;
             stickerList.set(indexClickSticker,updateSticker);
         }
     }
 
-    private int calculateInSampleSize(BitmapFactory.Options options,int Width, int Height)
+    public void saveImage()
     {
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > Height || width > Width) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) > Height
-                    && (halfWidth / inSampleSize) > Width) {
-                inSampleSize *= 2;
-            }
+        ContentValues contentValues = new ContentValues(3);
+        contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, "Draw image");
+        Uri imageUri = getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
+        try {
+            OutputStream imageFileOS = getContext().getContentResolver().openOutputStream(imageUri);
+            saveBitmap.compress(Bitmap.CompressFormat.JPEG, 90, imageFileOS);
+            Toast t = Toast.makeText(getContext(), "Saved!", Toast.LENGTH_SHORT);
+            t.show();
+        } catch (Exception e) {
+            Log.v("Error: ", e.toString());
         }
-
-        return inSampleSize;
     }
+
 
 }

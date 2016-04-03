@@ -11,8 +11,11 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PointF;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -39,6 +42,7 @@ import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -73,6 +77,7 @@ public class DetailActivity extends Activity {
                         Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
                         bmOptions.inSampleSize = calculateInSampleSize(bmOptions,250,250);
                         bmOptions.inJustDecodeBounds = false;
+                        InputStream inputStream = getContentResolver().openInputStream(imageUri);
                         bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
                         addMemeSticker(bmpSticker);
                     }catch (Exception e){
@@ -87,7 +92,9 @@ public class DetailActivity extends Activity {
 
     private void addMemeSticker(Bitmap bitmapSticker)
     {
-        Sticker newSticker = new Sticker(bitmapSticker,50,100,1);
+        Matrix matrix = new Matrix();
+        Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);;
+        Sticker newSticker = new Sticker(bitmapSticker,50,100,matrix,drawable);
         MemeImageView.setSticker(newSticker);
     }
 
@@ -140,8 +147,10 @@ public class DetailActivity extends Activity {
         TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
         getAddCaptionBtn();
 
-    //    getSaveButton();
+
         getSticketButton();
+
+        getSaveButton();
     }
 
 
@@ -188,30 +197,13 @@ public class DetailActivity extends Activity {
     }
 
     private void getSaveButton() {
-      /* SaveImageButton = (Button)findViewById(R.id.SaveImageButton);
+       SaveImageButton = (Button)findViewById(R.id.SaveImageButton);
         SaveImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //drawStickerOnCanvas();
-                //Save image
-                ContentValues contentValues = new ContentValues(3);
-                contentValues.put(MediaStore.Images.Media.DISPLAY_NAME, "Draw image");
-                Uri imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues);
-                try {
-                    OutputStream imageFileOS = getContentResolver().openOutputStream(imageUri);
-                    alteredBitmap.compress(Bitmap.CompressFormat.JPEG, 90, imageFileOS);
-                    Toast t = Toast.makeText(getApplicationContext(), "Saved!", Toast.LENGTH_SHORT);
-                    t.show();
-                } catch (Exception e) {
-                    Log.v("Error: ", e.toString());
-                }
+               MemeImageView.saveImage();
             }
-        });*/
-    }
-
-    private void drawStickerOnCanvas()
-    {
-
+        });
     }
 
     private void getColorSpinner() {
@@ -291,16 +283,22 @@ public class DetailActivity extends Activity {
     static final int ZOOM = 300;
     int mode = NONE;
     float oldDist = 1f;
+    float mFocusX;
+    float mFocusY;
+    PointF mid = new PointF();
+    protected static final int INVALID_POINTER_ID = -1;
+    protected int mActivePointerId = INVALID_POINTER_ID;
+
     private void getMemeImageView() {
         MemeImageView = (MyView)findViewById(R.id.myview);
         MemeImageView.setCanvasBitmap(bmpImage);
         MemeImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+
                 // MemeImageView.mScaleDetector.onTouchEvent(event);
                 switch (event.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
-                        mode = DRAG;
                         captionTextClicked = MemeImageView.getInitTextLocation(event.getRawX(), event.getRawY());
                         if (captionTextClicked == null) {
                             TextSetting.setVisibility(View.GONE);
@@ -314,10 +312,21 @@ public class DetailActivity extends Activity {
                             addItemOnSpiner();
                             getColorSpinner();
                         }
+                        mode = DRAG;
+                        break;
+                    case MotionEvent.ACTION_UP: //first finger lifted
+                    case MotionEvent.ACTION_POINTER_UP: //second finger lifted
+                        mode = NONE;
+                        break;
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                        oldDist = spacing(event);
+                        if (oldDist > 1f) {
+                            midPoint(mid, event);
+                            mode = ZOOM;
+                        }
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        if (mode == DRAG)
-                        {
+                        if (mode == DRAG) {
                             if (captionTextClicked != null) {
                                 float x = event.getRawX();
                                 float y = event.getRawY();
@@ -327,35 +336,18 @@ public class DetailActivity extends Activity {
                                 float y = event.getRawY();
                                 MemeImageView.moveObject(x, y);
                             }
-                        }else if (mode == ZOOM)
-                        {
-                           /* float x = event.getX(0) - event.getX(1);
-                            float y = event.getY(0) - event.getY(1);
-                            double res = (x*x) + (y*y);
-                            float newDist = (float)Math.sqrt(res);
-                            if (newDist >3f)
-                            {
-                                mScaleFactor = newDist/oldDist;
-                                mScaleFactor = Math.max(1f, Math.min(mScaleFactor, 2.0f));
-                                MemeImageView.scaleSticker(mScaleFactor);
-                            }*/
-                        }
 
-                        break;
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_POINTER_UP:
-                        mode = NONE;
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        float x = event.getX(0) - event.getX(1);
-                        float y = event.getY(0) - event.getY(1);
-                        double res = (x*x) + (y*y);
-                        oldDist =(float)Math.sqrt(res);
-                        if (oldDist > 3f)
-                        {
-                            mode = ZOOM;
-                        }
+                        } else if (mode == ZOOM) {
+                            float newDist = spacing(event);
+                            if (newDist > 1f) {
+                                mScaleFactor = newDist / oldDist;
 
+                                mScaleFactor = Math.max(0.5f, Math.min(mScaleFactor, 3.0f));
+                                Log.v("Scale:",String.valueOf(mScaleFactor));
+                                MemeImageView.scaleSticker(mScaleFactor, mid.x, mid.y);
+                            }
+                        }
+                        break;
                     default:
                         break;
                 }
@@ -363,19 +355,32 @@ public class DetailActivity extends Activity {
                 return true;
             }
         });
+
        /* MemeImageView.mScaleDetector = new ScaleGestureDetector(getApplicationContext(),new ScaleGestureDetector.SimpleOnScaleGestureListener(){
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
                 mScaleFactor *= detector.getScaleFactor();
-                mScaleFactor = Math.max(1f, Math.min(mScaleFactor, 3.0f));
-                Log.v("Get factor",String.valueOf(mScaleFactor));
-                MemeImageView.scaleSticker(mScaleFactor);
-                MemeImageView.invalidate();
+                mScaleFactor = Math.max(0.5f, Math.min(mScaleFactor, 3.0f));
+                mFocusX = detector.getFocusX();
+                mFocusY = detector.getFocusY();
+                MemeImageView.scaleSticker(mScaleFactor,mFocusX,mFocusY);
                 return true;
             }
         });*/
 
     }
+    private float spacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        double res= (double)(x*x) + (double)(y*y);
+        return (float)Math.sqrt(res);
+    }
+    private void midPoint(PointF point, MotionEvent event) {
+        float x = event.getX(0) + event.getX(1);
+        float y = event.getY(0) + event.getY(1);
+        point.set(x / 2, y / 2);
+    }
+
 
 
 
