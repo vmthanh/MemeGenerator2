@@ -12,6 +12,9 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -123,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 mpopup = new PopupWindow(popUpView, ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
                 mpopup.setAnimationStyle(android.R.style.Animation_Dialog);
                 mpopup.showAtLocation(popUpView, Gravity.BOTTOM, 0, 0);
+
                 Button ChooseImageBtn = (Button) popUpView.findViewById(R.id.ChooseImageBtn);
                 ChooseImageBtn.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -135,6 +139,13 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         openBackCamera();
+                    }
+                });
+                Button LoadGifImageBtn = (Button) popUpView.findViewById(R.id.LoadGifImageBtn);
+                LoadGifImageBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        openGiftImage();
                     }
                 });
                 Button PopupCancle = (Button) popUpView.findViewById(R.id.PopupCancle);
@@ -165,6 +176,13 @@ public class MainActivity extends AppCompatActivity {
         };
         customListAdapter.setOnItemClickListener(onItemClickListener);
         memeList.setAdapter(customListAdapter);
+
+    }
+
+    private  void openGiftImage()
+    {
+        Intent intent = new Intent(MainActivity.this,GiftImageActivity.class);
+        startActivity(intent);
 
     }
 

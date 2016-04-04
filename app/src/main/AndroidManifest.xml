@@ -4,6 +4,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="true"
@@ -29,6 +30,18 @@
                 <action android:name="android.intent.action.MAIN"/>
             </intent-filter>
         </activity>
+        <activity
+            android:name=".GiftImageActivity"
+            android:label="Gift Image Detail"
+            android:hardwareAccelerated="false"
+            android:allowEmbedded="@style/AppTheme.NoActionBar">
+            <intent-fildter>
+                <action android:name="android.intent.action.MAIN"/>
+            </intent-fildter>
+
+        </activity>
+
+
     </application>
 
 </manifest>

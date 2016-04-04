@@ -110,7 +110,9 @@ public class DetailActivity extends Activity {
                 BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                 bmOptions.inJustDecodeBounds = true;
                 bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
-                bmOptions.inSampleSize = calculateInSampleSize(bmOptions,400,400);
+                int newWidth = 400;
+                int newHeight = (int)newWidth*bmOptions.outHeight/bmOptions.outWidth;
+                bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
                 bmOptions.inJustDecodeBounds = false;
                 bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(
                         imageUri), null, bmOptions);
@@ -125,7 +127,9 @@ public class DetailActivity extends Activity {
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeFile(imagePath,options);
             // Calculate inSampleSize
-            options.inSampleSize = calculateInSampleSize(options, 300, 300);
+            int newWidth = 400 ;
+            int newHeight = (int)newWidth*options.outHeight/options.outWidth;
+            options.inSampleSize = calculateInSampleSize(options, newWidth, newHeight);
             // Decode bitmap with inSampleSize set
             options.inJustDecodeBounds = false;
             bmpImage = BitmapFactory.decodeFile(imagePath, options);
@@ -283,11 +287,7 @@ public class DetailActivity extends Activity {
     static final int ZOOM = 300;
     int mode = NONE;
     float oldDist = 1f;
-    float mFocusX;
-    float mFocusY;
     PointF mid = new PointF();
-    protected static final int INVALID_POINTER_ID = -1;
-    protected int mActivePointerId = INVALID_POINTER_ID;
 
     private void getMemeImageView() {
         MemeImageView = (MyView)findViewById(R.id.myview);
@@ -295,7 +295,6 @@ public class DetailActivity extends Activity {
         MemeImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-
                 // MemeImageView.mScaleDetector.onTouchEvent(event);
                 switch (event.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
@@ -355,18 +354,6 @@ public class DetailActivity extends Activity {
                 return true;
             }
         });
-
-       /* MemeImageView.mScaleDetector = new ScaleGestureDetector(getApplicationContext(),new ScaleGestureDetector.SimpleOnScaleGestureListener(){
-            @Override
-            public boolean onScale(ScaleGestureDetector detector) {
-                mScaleFactor *= detector.getScaleFactor();
-                mScaleFactor = Math.max(0.5f, Math.min(mScaleFactor, 3.0f));
-                mFocusX = detector.getFocusX();
-                mFocusY = detector.getFocusY();
-                MemeImageView.scaleSticker(mScaleFactor,mFocusX,mFocusY);
-                return true;
-            }
-        });*/
 
     }
     private float spacing(MotionEvent event) {

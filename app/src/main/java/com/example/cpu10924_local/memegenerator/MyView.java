@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.OutputStream;
@@ -62,7 +63,7 @@ public class MyView extends View {
         {
             myCanvas.save();
             myCanvas.setMatrix(stickerList.get(i).matrix);
-           stickerList.get(i).drawable.draw(myCanvas);
+            stickerList.get(i).drawable.draw(myCanvas);
             myCanvas.restore();
         }
         canvas.drawBitmap(saveBitmap,0,0,null);
@@ -71,9 +72,8 @@ public class MyView extends View {
 
     public Bitmap getResizedBitmap(Bitmap bmp, int newWidth, int newHeight)
     {
-        int width = bmpImage.getWidth();
-        int height = bmpImage.getHeight();
-        return Bitmap.createScaledBitmap(bmp,newWidth,newWidth,false);
+
+        return Bitmap.createScaledBitmap(bmp,newWidth,newHeight,false);
     }
 
 
@@ -81,12 +81,10 @@ public class MyView extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         imageViewWidth = MeasureSpec.getSize(widthMeasureSpec);
-        imageViewHeight = MeasureSpec.getSize(heightMeasureSpec);
+        imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
         bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
-        saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.ARGB_8888);
-         myCanvas = new Canvas(saveBitmap);
-
-
+        saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
+        myCanvas = new Canvas(saveBitmap);
     }
 
     public MyView(Context context,AttributeSet attrs)
@@ -148,7 +146,7 @@ public class MyView extends View {
 
             Rect bound = new Rect();
             captionTextList.get(i).paint.getTextBounds(captionTextList.get(i).content,0,captionTextList.get(i).content.length(),bound);
-            float padding = 10;
+            float padding = 20;
             float left = captionTextList.get(i).x - padding;
             float top = captionTextList.get(i).y -padding;
             float right = captionTextList.get(i).x + bound.width() +padding;
@@ -234,7 +232,7 @@ public class MyView extends View {
             Sticker updateSticker= stickerList.get(indexClickSticker);
             float newWidth = updateSticker.bitmap.getWidth()*mScaleFactor;
             float newHeigt = updateSticker.bitmap.getHeight()*mScaleFactor;
-            if(newWidth >100 && newHeigt >100)
+            if(newWidth >200 && newHeigt >200)
             {
                 if (newWidth <1200 && newHeigt <1200) {
                     updateSticker.matrix.postScale(mScaleFactor, mScaleFactor, updateSticker.x, updateSticker.y);

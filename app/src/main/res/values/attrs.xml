@@ -3,4 +3,7 @@
     <declare-styleable name="MyView">
 
     </declare-styleable>
+    <declare-styleable name="MyGifView">
+
+    </declare-styleable>
 </resources>
