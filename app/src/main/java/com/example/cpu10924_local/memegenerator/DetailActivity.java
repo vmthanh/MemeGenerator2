@@ -24,6 +24,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import java.io.InputStream;
@@ -47,7 +48,7 @@ public class DetailActivity extends Activity {
     private Button ColorSpinner;
     private static final int CHOOSE_IMAGE_REQUEST = 1;
     private LinearLayout TextSetting;
-
+    private ImageView deleteIcon;
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -166,10 +167,25 @@ public class DetailActivity extends Activity {
         fontSizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         FontSpinner.setAdapter(fontSizeAdapter);
         TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
+        getDeleteButton();
+
         getAddCaptionBtn();
         getSticketButton();
         getSaveButton();
         getRotateButton();
+    }
+
+    private void getDeleteButton() {
+        deleteIcon = (ImageView)findViewById(R.id.deleteIcon);
+        deleteIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MemeImageView.DeleteObject();
+                MemeImageView.invalidate();
+                deleteIcon.setVisibility(View.GONE);
+                TextSetting.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void getRotateButton() {
@@ -314,8 +330,9 @@ public class DetailActivity extends Activity {
     PointF mid = new PointF();
 
     private void getMemeImageView(int angle) {
+
         MemeImageView = (MyView)findViewById(R.id.myview);
-        MemeImageView.setCanvasBitmap(bmpImage,angle);
+        MemeImageView.setCanvasBitmap(bmpImage, angle);
         MemeImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -324,11 +341,16 @@ public class DetailActivity extends Activity {
                         captionTextClicked = MemeImageView.getInitTextLocation(event.getRawX(), event.getRawY());
                         if (captionTextClicked == null) {
                             TextSetting.setVisibility(View.GONE);
+                            deleteIcon.setVisibility(View.GONE);
                             stickerClicked = MemeImageView.getInitStickerLocation(event.getRawX(), event.getRawY());
                             if (stickerClicked != null) {
-
+                                deleteIcon.setVisibility(View.VISIBLE);
+                            }else{
+                                deleteIcon.setVisibility(View.GONE);
                             }
                         } else {
+
+                            deleteIcon.setVisibility(View.VISIBLE);
                             TextSetting.setVisibility(View.VISIBLE);
                             getEditText();
                             addItemOnSpiner();

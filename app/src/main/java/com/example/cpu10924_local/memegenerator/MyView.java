@@ -187,7 +187,17 @@ public class MyView extends View {
     }
 
 
-
+    public void DeleteObject()
+    {
+        if (indexClickText!= -1)
+        {
+            captionTextList.remove(indexClickText);
+        }
+        if (indexClickSticker !=-1)
+        {
+            stickerList.remove(indexClickSticker);
+        }
+    }
     public CaptionText getInitTextLocation(float locX,float locY)
     {
 
