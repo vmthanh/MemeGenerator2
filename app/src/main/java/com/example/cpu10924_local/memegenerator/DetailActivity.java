@@ -1,49 +1,32 @@
 package com.example.cpu10924_local.memegenerator;
 
-import android.app.ActionBar;
 import android.app.Activity;
-import android.content.ContentValues;
+
 import android.content.Intent;
-import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.FloatMath;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.ViewConfiguration;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
-
-
-import org.w3c.dom.Text;
-
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +42,7 @@ public class DetailActivity extends Activity {
     private Button SaveImageButton;
     private Button AddMemeStickerBtn;
     private Button AddCaptionBtn;
+    private Button RotateBtn;
     private Spinner FontSpinner;
     private Button ColorSpinner;
     private static final int CHOOSE_IMAGE_REQUEST = 1;
@@ -90,6 +74,35 @@ public class DetailActivity extends Activity {
         }
     }
 
+    private int checkImageOrientation(String path)
+    {
+        try{
+            ExifInterface exifInterface = new ExifInterface(path);
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+            int angle = 0;
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    angle = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    angle = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    angle = 270;
+                    break;
+                default:
+                    angle = 0;
+                    break;
+            }
+            return angle;
+
+        }catch (Exception e)
+        {
+            return -1;
+        }
+    }
+
     private void addMemeSticker(Bitmap bitmapSticker)
     {
         Matrix matrix = new Matrix();
@@ -97,6 +110,7 @@ public class DetailActivity extends Activity {
         Sticker newSticker = new Sticker(bitmapSticker,50,100,matrix,drawable);
         MemeImageView.setSticker(newSticker);
     }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,33 +121,36 @@ public class DetailActivity extends Activity {
         if (imageUri !=null)
         {
             try{
+                int angle = checkImageOrientation(imageUri.getPath());
                 BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                 bmOptions.inJustDecodeBounds = true;
                 bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
-                int newWidth = 400;
+                int newWidth = 300;
                 int newHeight = (int)newWidth*bmOptions.outHeight/bmOptions.outWidth;
                 bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
                 bmOptions.inJustDecodeBounds = false;
                 bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(
                         imageUri), null, bmOptions);
-                getMemeImageView();
+                getMemeImageView(angle);
 
             }catch (Exception e)
             {
 
             }
         }else if (imagePath !=null){
+            int angle = checkImageOrientation(imagePath);
             final BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
             BitmapFactory.decodeFile(imagePath,options);
             // Calculate inSampleSize
-            int newWidth = 400 ;
+            int newWidth = 300 ;
             int newHeight = (int)newWidth*options.outHeight/options.outWidth;
             options.inSampleSize = calculateInSampleSize(options, newWidth, newHeight);
             // Decode bitmap with inSampleSize set
             options.inJustDecodeBounds = false;
             bmpImage = BitmapFactory.decodeFile(imagePath, options);
-            getMemeImageView();
+            getMemeImageView(angle);
+
         }else {
             Log.v("Error:", "Cannot pass parameter");
         }
@@ -150,11 +167,21 @@ public class DetailActivity extends Activity {
         FontSpinner.setAdapter(fontSizeAdapter);
         TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
         getAddCaptionBtn();
-
-
         getSticketButton();
-
         getSaveButton();
+        getRotateButton();
+    }
+
+    private void getRotateButton() {
+        RotateBtn = (Button)findViewById(R.id.RotateBtn);
+        RotateBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MemeImageView.rotateImage();
+                MemeImageView.invalidate();
+            }
+        });
+
     }
 
 
@@ -183,10 +210,6 @@ public class DetailActivity extends Activity {
         });
 
     }
-
-
-
-
 
     private void getSticketButton()
     {
@@ -287,15 +310,15 @@ public class DetailActivity extends Activity {
     static final int ZOOM = 300;
     int mode = NONE;
     float oldDist = 1f;
+    float newDist = 1f;
     PointF mid = new PointF();
 
-    private void getMemeImageView() {
+    private void getMemeImageView(int angle) {
         MemeImageView = (MyView)findViewById(R.id.myview);
-        MemeImageView.setCanvasBitmap(bmpImage);
+        MemeImageView.setCanvasBitmap(bmpImage,angle);
         MemeImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                // MemeImageView.mScaleDetector.onTouchEvent(event);
                 switch (event.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
                         captionTextClicked = MemeImageView.getInitTextLocation(event.getRawX(), event.getRawY());
@@ -319,7 +342,8 @@ public class DetailActivity extends Activity {
                         break;
                     case MotionEvent.ACTION_POINTER_DOWN:
                         oldDist = spacing(event);
-                        if (oldDist > 1f) {
+                        Log.v("Old dis:",String.valueOf(oldDist));
+                        if (oldDist > 2f) {
                             midPoint(mid, event);
                             mode = ZOOM;
                         }
@@ -337,14 +361,18 @@ public class DetailActivity extends Activity {
                             }
 
                         } else if (mode == ZOOM) {
-                            float newDist = spacing(event);
-                            if (newDist > 1f) {
-                                mScaleFactor = newDist / oldDist;
-
-                                mScaleFactor = Math.max(0.5f, Math.min(mScaleFactor, 3.0f));
-                                Log.v("Scale:",String.valueOf(mScaleFactor));
-                                MemeImageView.scaleSticker(mScaleFactor, mid.x, mid.y);
+                            if(spacing(event)!=newDist)
+                            {
+                                newDist = spacing(event);
+                                Log.v("New dis:",String.valueOf(newDist));
+                                if ((Math.abs(newDist - oldDist)) > 2f) {
+                                    mScaleFactor = newDist / oldDist;
+                                    mScaleFactor = Math.max(0.5f, Math.min(mScaleFactor, 3.0f));
+                                    Log.v("Scale:",String.valueOf(mScaleFactor));
+                                    MemeImageView.scaleSticker(mScaleFactor, mid.x, mid.y);
+                                }
                             }
+
                         }
                         break;
                     default:

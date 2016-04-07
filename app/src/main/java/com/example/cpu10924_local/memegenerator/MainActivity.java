@@ -1,70 +1,38 @@
 package com.example.cpu10924_local.memegenerator;
 
-import android.app.ActionBar;
-import android.content.ContentValues;
+
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.PopupWindow;
-import android.widget.RelativeLayout;
-import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.Console;
 import java.io.File;
-import java.io.FilenameFilter;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.jar.Manifest;
 
 public class MainActivity extends AppCompatActivity {
 
     //New paramters for recycle view
     private RecyclerView memeList;
     private File[] files;
+    private static final int PICK_VIDEO_REQUEST  = 4;
     private static final int CHOOSE_IMAGE_REQUEST = 3;
     private static final int OPEN_CAMERA_REQUEST = 1;
     private final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL = 2;
@@ -181,8 +149,9 @@ public class MainActivity extends AppCompatActivity {
 
     private  void openGiftImage()
     {
-        Intent intent = new Intent(MainActivity.this,GiftImageActivity.class);
-        startActivity(intent);
+        Intent chooseVideoIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        chooseVideoIntent.setType("image/gif");
+        startActivityForResult(chooseVideoIntent, PICK_VIDEO_REQUEST);
 
     }
 
@@ -292,6 +261,7 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case CHOOSE_IMAGE_REQUEST:
                 if (resultCode == RESULT_OK) {
+
                     Uri imageUri = data.getData();
                     Intent detailIntent = new Intent(MainActivity.this, DetailActivity.class);
                     detailIntent.putExtra("bitmapUri", imageUri);
@@ -300,6 +270,15 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case OPEN_CAMERA_REQUEST:
                 break;
+            case PICK_VIDEO_REQUEST:
+                if (resultCode == RESULT_OK)
+                {
+                    Uri videoUri = data.getData();
+                    Intent giftImageActivity = new Intent(MainActivity.this,GiftImageActivity.class);
+                    giftImageActivity.putExtra("videoUri",videoUri);
+                    startActivity(giftImageActivity);
+                }
+
             default:
                 break;
         }

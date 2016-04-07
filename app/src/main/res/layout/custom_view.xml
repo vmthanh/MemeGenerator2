@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#404040"
+    >
     <com.example.cpu10924_local.memegenerator.MyView
         android:layout_width="match_parent"
         android:layout_height="300dp"
-        android:id="@+id/myview"/>
+        android:id="@+id/myview"
+
+       />
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_alignParentBottom="true">
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -21,6 +26,11 @@
             android:layout_height="wrap_content"
             android:id="@+id/AddCaptionBtn"
             android:text="Add Caption"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/RotateBtn"
+            android:text="Rotate image"/>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -34,6 +44,8 @@
                 android:id="@+id/MemeEditText"
                 android:layout_weight="1"
                 android:hint="Text"
+                android:textColor="#ffffff"
+                android:textColorHint="#ffffff"
                 />
             <Spinner
                 android:layout_width="match_parent"
@@ -41,7 +53,10 @@
                 android:prompt="@string/font_size_promp"
                 android:spinnerMode="dialog"
                 android:id="@+id/FontSpinner"
-                android:layout_weight="1"></Spinner>
+                android:layout_weight="1"
+                android:theme="@style/Theme.NoTitleBar.WithColoredSpinners"
+
+                ></Spinner>
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -79,4 +94,4 @@
     </LinearLayout>
 
 
-</LinearLayout>
+</RelativeLayout>

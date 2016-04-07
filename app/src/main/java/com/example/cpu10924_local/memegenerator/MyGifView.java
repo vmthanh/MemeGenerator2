@@ -9,15 +9,17 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ShapeDrawable;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 
-import com.bumptech.glide.load.resource.bitmap.GlideBitmapDrawable;
-import com.bumptech.glide.load.resource.gif.GifDrawable;
-
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.File;
 
 /**
  * Created by CPU10924-local on 4/4/2016.
@@ -27,6 +29,7 @@ public class MyGifView extends View {
     public long movieStart;
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
     public List<Sticker> stickerList = new ArrayList<Sticker>();
+    private List<Bitmap> listFrame = new ArrayList<>();
     private int indexClickText = -1;
     private int indexClickSticker = -1;
     private float initX;
@@ -34,18 +37,30 @@ public class MyGifView extends View {
     public MyGifView(Context context)
     {
         super(context);
-        init();
+        //init();
     }
     public MyGifView(Context context,AttributeSet attrs)
     {
         super(context, attrs);
-        init();
+        //init();
     }
-    private void init()
+    private void init(Uri videoUri)
     {
-        InputStream is = getContext().getResources().openRawResource(R.raw.horse);
-        mMovie = Movie.decodeStream(is);
 
+       try {
+           InputStream is = getContext().getContentResolver().openInputStream(videoUri);
+           mMovie = Movie.decodeStream(is);
+
+       }catch (Exception e)
+       {
+
+       }
+
+
+    }
+    public void setGiftVideo(Uri videoUri)
+    {
+        init(videoUri);
     }
 
     @Override
@@ -68,16 +83,29 @@ public class MyGifView extends View {
             canvas.scale(scaleX,scaleY);
             mMovie.draw(canvas, 0, 0);
             canvas.restore();
+
             for(int i=0;i<captionTextList.size();++i)
             {
                 canvas.drawText(captionTextList.get(i).content.toUpperCase(),captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).strokepaint);
                 canvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).paint);
             }
+
+            for(int i=0; i<stickerList.size();++i)
+            {
+                canvas.save();
+                canvas.setMatrix(stickerList.get(i).matrix);
+                stickerList.get(i).drawable.draw(canvas);
+                canvas.restore();
+            }
             invalidate();
         }
 
     }
+    public Bitmap getResizedBitmap(Bitmap bmp, int newWidth, int newHeight)
+    {
 
+        return Bitmap.createScaledBitmap(bmp,newWidth,newHeight,false);
+    }
     public void addTextCaption(CaptionText textCaption)
     {
         Rect bound = new Rect();
@@ -131,6 +159,55 @@ public class MyGifView extends View {
         indexClickText = -1;
         return null;
 
+    }
+    public Sticker getInitStickerLocation(float locX, float locY)
+    {
+        for(int i=0; i<stickerList.size();++i)
+        {
+            Bitmap img = stickerList.get(i).bitmap;
+            float padding = 50;
+            float left = stickerList.get(i).x - padding;
+            float right = stickerList.get(i).x + img.getWidth() + padding;
+            float top = stickerList.get(i).y - padding;
+            float bottom = stickerList.get(i).y + img.getHeight() + padding;
+            if (top <= locY && locY <= bottom)
+            {
+                if (left  <= locX && locX <= right)
+                {
+                    initX = locX;
+                    initY = locY;
+                    indexClickSticker =  i;
+                    return stickerList.get(i);
+                }
+            }
+        }
+        indexClickSticker = -1;
+        return  null;
+    }
+    public void setSticker(Sticker sticker)
+    {
+        sticker.bitmap = getResizedBitmap(sticker.bitmap,300,300);
+        sticker.matrix.setTranslate(sticker.x, sticker.y);
+        sticker.drawable.setBounds(0, 0, sticker.bitmap.getWidth(), sticker.bitmap.getHeight());
+        stickerList.add(sticker);
+    }
+    public void scaleSticker(float mScaleFactor,float mFocusX, float mFocusY)
+    {
+
+        if (indexClickSticker != -1)
+        {
+            Sticker updateSticker= stickerList.get(indexClickSticker);
+            float newWidth = updateSticker.bitmap.getWidth()*mScaleFactor;
+            float newHeigt = updateSticker.bitmap.getHeight()*mScaleFactor;
+            if(newWidth >200 && newHeigt >200)
+            {
+                if (newWidth <1200 && newHeigt <1200) {
+                    updateSticker.matrix.postScale(mScaleFactor, mScaleFactor, updateSticker.x, updateSticker.y);
+                    updateSticker.bitmap = getResizedBitmap(updateSticker.bitmap, (int) newWidth, (int) newHeigt);
+                }
+            }
+            stickerList.set(indexClickSticker,updateSticker);
+        }
     }
     public void moveObject(float newX, float newY)
     {
