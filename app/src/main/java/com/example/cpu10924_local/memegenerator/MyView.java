@@ -3,23 +3,16 @@ package com.example.cpu10924_local.memegenerator;
 import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Point;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.OutputStream;
@@ -32,6 +25,7 @@ import java.util.List;
 public class MyView extends View {
     private Bitmap bmpImage;
     private Matrix matrix;
+    private Matrix imageViewMatrix;
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
     public List<Sticker> stickerList = new ArrayList<Sticker>();
     private int indexClickText = -1;
@@ -40,10 +34,11 @@ public class MyView extends View {
     private float initY;
     private int imageViewWidth;
     private int imageViewHeight;
+    private boolean isRotate;
     private int myviewWidth;
     private int myviewHeight;
     private Bitmap saveBitmap;
-    private Canvas myCanvas;
+    private Canvas savedCanvas;
 
     private Paint boundRectPaint;
     private Rect boundRect;
@@ -53,21 +48,22 @@ public class MyView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        myCanvas.drawBitmap(bmpImage, 0, 0, null);
+            savedCanvas.drawBitmap(bmpImage, 0,0, null);
+
 
         //Draw text
         for (int i=0; i<captionTextList.size();i++)
         {
 
-            myCanvas.drawText(captionTextList.get(i).content.toUpperCase(),captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).strokepaint);
-            myCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
+            savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).strokepaint);
+            savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
             if (indexClickText !=-1 && indexClickText ==i)
             {
                 float left = captionTextList.get(i).x-30;
                 float top = captionTextList.get(i).y-boundRect.height();
                 float right = captionTextList.get(i).x+boundRect.width()+30;
                 float bottom = captionTextList.get(i).y;
-                myCanvas.drawRect(left,top,right,bottom, boundRectPaint);
+                savedCanvas.drawRect(left, top, right, bottom, boundRectPaint);
 
             }
             Log.v("index click text:",String.valueOf(indexClickText));
@@ -77,13 +73,13 @@ public class MyView extends View {
         //Draw sticker
         for(int i=0; i<stickerList.size();i++)
         {
-            myCanvas.save();
-            myCanvas.setMatrix(stickerList.get(i).matrix);
-            stickerList.get(i).drawable.draw(myCanvas);
-            myCanvas.restore();
+            savedCanvas.save();
+            savedCanvas.setMatrix(stickerList.get(i).matrix);
+            stickerList.get(i).drawable.draw(savedCanvas);
+            savedCanvas.restore();
         }
 
-        canvas.drawBitmap(saveBitmap,0,0,null);
+        canvas.drawBitmap(saveBitmap,imageViewMatrix,null);
 
     }
 
@@ -101,11 +97,20 @@ public class MyView extends View {
         {
             myviewHeight = MeasureSpec.getSize(heightMeasureSpec);
             myviewWidth = MeasureSpec.getSize(widthMeasureSpec);
-            imageViewWidth = myviewWidth;
-            imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+            if (bmpImage.getHeight() > bmpImage.getWidth())
+            {
+                imageViewHeight = myviewHeight;
+                imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
+                imageViewMatrix.setTranslate((int)imageViewWidth/4,0);
+            }else{
+                imageViewWidth = myviewWidth;
+                imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+                imageViewMatrix.setTranslate(0,0);
+            }
+
             bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
             saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
-            myCanvas = new Canvas(saveBitmap);
+            savedCanvas = new Canvas(saveBitmap);
 
         }
 
@@ -121,7 +126,8 @@ public class MyView extends View {
 
     private void init()
     {
-
+        imageViewMatrix = new Matrix();
+        imageViewMatrix.setTranslate(0,0);
         boundRect = new Rect();
         boundRectPaint = new Paint();
 
@@ -129,26 +135,36 @@ public class MyView extends View {
     public void setCanvasBitmap(Bitmap bitmap,int angle)
     {
         bmpImage = bitmap;
+        if (angle!=0)
+        {
+            isRotate = true;
+        }
+
     }
 
-    public void rotateImage()
+    public void rotateImage(int angle)
     {
         isSetting = true;
+        isRotate = !isRotate;
+
         matrix = new Matrix();
-        matrix.postRotate(90);
+        matrix.postRotate(angle);
         bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
         if (imageViewWidth > imageViewHeight)
         {
             imageViewHeight = myviewHeight;
             imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
+            imageViewMatrix.setTranslate((int)imageViewWidth/4,0);
         }
         else if (imageViewWidth <imageViewHeight){
             imageViewWidth = myviewWidth;
             imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+            imageViewMatrix.setTranslate(0,0);
         }
+
         bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
         saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
-        myCanvas = new Canvas(saveBitmap);
+        savedCanvas = new Canvas(saveBitmap);
     }
     public void setSticker(Sticker sticker)
     {
@@ -200,21 +216,26 @@ public class MyView extends View {
     }
     public CaptionText getInitTextLocation(float locX,float locY)
     {
-
+        float x = locX;
+        float y = locY;
+        if (isRotate)
+        {
+            x = x- imageViewWidth/4;
+        }
         for(int i=0;i<captionTextList.size();i++)
         {
 
             Rect bound = new Rect();
             captionTextList.get(i).paint.getTextBounds(captionTextList.get(i).content,0,captionTextList.get(i).content.length(),bound);
-            float padding = 30;
-            float left = captionTextList.get(i).x - padding;
-            float top = captionTextList.get(i).y -padding;
+            float padding = 80;
+            float left = captionTextList.get(i).x ;
+            float top = captionTextList.get(i).y -2*padding;
             float right = captionTextList.get(i).x + bound.width() +padding;
             float bottom = captionTextList.get(i).y + bound.height() +padding;
 
-            if (top <= locY && locY <=bottom)
+            if (top <= y && y <=bottom)
             {
-                if(left <=locX && locX <=right)
+                if(left <=x && x <=right)
                 {
                     initX = locX;
                     initY = locY;
@@ -237,18 +258,23 @@ public class MyView extends View {
 
     public Sticker getInitStickerLocation(float locX, float locY)
     {
-
+        float x = locX;
+        float y = locY;
+        if (isRotate)
+        {
+            x = x- imageViewWidth/4;
+        }
         for(int i=0; i<stickerList.size();++i)
         {
             Bitmap img = stickerList.get(i).bitmap;
-            float padding = 50;
-            float left = stickerList.get(i).x - padding;
+            float padding = 80;
+            float left = stickerList.get(i).x;
             float right = stickerList.get(i).x + img.getWidth() + padding;
-            float top = stickerList.get(i).y - padding;
+            float top = stickerList.get(i).y - 2*padding;
             float bottom = stickerList.get(i).y + img.getHeight() + padding;
-            if (top <= locY && locY <= bottom)
+            if (top <= y && y <= bottom)
             {
-                if (left  <= locX && locX <= right)
+                if (left  <= x && x <= right)
                 {
                     initX = locX;
                     initY = locY;

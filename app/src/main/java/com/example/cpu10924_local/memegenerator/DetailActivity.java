@@ -193,7 +193,7 @@ public class DetailActivity extends Activity {
         RotateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MemeImageView.rotateImage();
+                MemeImageView.rotateImage(90);
                 MemeImageView.invalidate();
             }
         });
@@ -332,17 +332,25 @@ public class DetailActivity extends Activity {
     private void getMemeImageView(int angle) {
 
         MemeImageView = (MyView)findViewById(R.id.myview);
+        if (angle!=0)
+        {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(angle);
+            bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
+        }
         MemeImageView.setCanvasBitmap(bmpImage, angle);
+      //  MemeImageView.rotateImage(90);
+
         MemeImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
-                        captionTextClicked = MemeImageView.getInitTextLocation(event.getRawX(), event.getRawY());
+                        captionTextClicked = MemeImageView.getInitTextLocation(event.getX(), event.getY());
                         if (captionTextClicked == null) {
                             TextSetting.setVisibility(View.GONE);
                             deleteIcon.setVisibility(View.GONE);
-                            stickerClicked = MemeImageView.getInitStickerLocation(event.getRawX(), event.getRawY());
+                            stickerClicked = MemeImageView.getInitStickerLocation(event.getX(), event.getY());
                             if (stickerClicked != null) {
                                 deleteIcon.setVisibility(View.VISIBLE);
                             }else{
@@ -373,12 +381,12 @@ public class DetailActivity extends Activity {
                     case MotionEvent.ACTION_MOVE:
                         if (mode == DRAG) {
                             if (captionTextClicked != null) {
-                                float x = event.getRawX();
-                                float y = event.getRawY();
+                                float x = event.getX();
+                                float y = event.getY();
                                 MemeImageView.moveObject(x, y);
                             } else if (stickerClicked != null) {
-                                float x = event.getRawX();
-                                float y = event.getRawY();
+                                float x = event.getX();
+                                float y = event.getY();
                                 MemeImageView.moveObject(x, y);
                             }
 
