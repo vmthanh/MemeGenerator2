@@ -50,26 +50,6 @@ public class MyView extends View {
 
             savedCanvas.drawBitmap(bmpImage, 0,0, null);
 
-
-        //Draw text
-        for (int i=0; i<captionTextList.size();i++)
-        {
-
-            savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).strokepaint);
-            savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
-            if (indexClickText !=-1 && indexClickText ==i)
-            {
-                float left = captionTextList.get(i).x-30;
-                float top = captionTextList.get(i).y-boundRect.height();
-                float right = captionTextList.get(i).x+boundRect.width()+30;
-                float bottom = captionTextList.get(i).y;
-                savedCanvas.drawRect(left, top, right, bottom, boundRectPaint);
-
-            }
-            Log.v("index click text:",String.valueOf(indexClickText));
-
-        }
-
         //Draw sticker
         for(int i=0; i<stickerList.size();i++)
         {
@@ -78,6 +58,18 @@ public class MyView extends View {
             stickerList.get(i).drawable.draw(savedCanvas);
             savedCanvas.restore();
         }
+
+        //Draw text
+        for (int i = 0; i < captionTextList.size(); i++) {
+
+            savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).strokepaint);
+            savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
+
+            Log.v("index click text:",String.valueOf(indexClickText));
+
+        }
+
+
 
         canvas.drawBitmap(saveBitmap,imageViewMatrix,null);
 
@@ -101,7 +93,7 @@ public class MyView extends View {
             {
                 imageViewHeight = myviewHeight;
                 imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
-                imageViewMatrix.setTranslate((int)imageViewWidth/4,0);
+                imageViewMatrix.setTranslate(imageViewWidth/10,0);
             }else{
                 imageViewWidth = myviewWidth;
                 imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
@@ -128,8 +120,6 @@ public class MyView extends View {
     {
         imageViewMatrix = new Matrix();
         imageViewMatrix.setTranslate(0,0);
-        boundRect = new Rect();
-        boundRectPaint = new Paint();
 
     }
     public void setCanvasBitmap(Bitmap bitmap,int angle)
@@ -154,7 +144,7 @@ public class MyView extends View {
         {
             imageViewHeight = myviewHeight;
             imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
-            imageViewMatrix.setTranslate((int)imageViewWidth/4,0);
+            imageViewMatrix.setTranslate(imageViewWidth/10,0);
         }
         else if (imageViewWidth <imageViewHeight){
             imageViewWidth = myviewWidth;
@@ -220,7 +210,7 @@ public class MyView extends View {
         float y = locY;
         if (isRotate)
         {
-            x = x- imageViewWidth/4;
+            x = x- imageViewWidth/10;
         }
         for(int i=0;i<captionTextList.size();i++)
         {
@@ -240,12 +230,6 @@ public class MyView extends View {
                     initX = locX;
                     initY = locY;
                     indexClickText = i;
-                    captionTextList.get(i).paint.getTextBounds(captionTextList.get(i).content,0,captionTextList.get(i).content.length(),boundRect);
-                    boundRectPaint.setColor(Color.GRAY);
-                    boundRectPaint.setStyle(Paint.Style.FILL);
-                    boundRectPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-                    boundRectPaint.setStrokeWidth(10);
-                    boundRectPaint.setAlpha(127);
                     return captionTextList.get(i);
                 }
             }
@@ -262,7 +246,7 @@ public class MyView extends View {
         float y = locY;
         if (isRotate)
         {
-            x = x- imageViewWidth/4;
+            x = x- imageViewWidth/10;
         }
         for(int i=0; i<stickerList.size();++i)
         {
