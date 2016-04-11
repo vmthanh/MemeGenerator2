@@ -198,11 +198,13 @@ public class MyView extends View {
         if (indexClickText!= -1)
         {
             captionTextList.remove(indexClickText);
+
         }
         if (indexClickSticker !=-1)
         {
             stickerList.remove(indexClickSticker);
         }
+        indexClickText = indexClickSticker = -1;
     }
     public CaptionText getInitTextLocation(float locX,float locY)
     {

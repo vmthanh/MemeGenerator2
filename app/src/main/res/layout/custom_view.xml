@@ -74,13 +74,15 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/AddMemeStickerBtn"
                 android:text="Add Sticker"
-                android:layout_weight="1"/>
+                android:layout_weight="1"
+               />
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/AddCaptionBtn"
                 android:text="Add Caption"
-                android:layout_weight="1"/>
+                android:layout_weight="1"
+                />
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
