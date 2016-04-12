@@ -61,11 +61,13 @@ public class DetailActivity extends Activity {
                         int angle = checkImageOrientation(imageUri.getPath());
                         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                         bmOptions.inJustDecodeBounds = true;
-                        Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
-                        bmOptions.inSampleSize = calculateInSampleSize(bmOptions,250,250);
+                        Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
+                        int newWidth = 250;
+                        int newHeight = (int)newWidth*bmOptions.outHeight/bmOptions.outWidth;
+                        bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
                         bmOptions.inJustDecodeBounds = false;
                         InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                        bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
+                        bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
                         addMemeSticker(bmpSticker,angle);
                     }catch (Exception e){
 
@@ -110,10 +112,8 @@ public class DetailActivity extends Activity {
     {
 
         Matrix matrix = new Matrix();
-
-
-            matrix.setRotate(angle);
-            bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrix,false);
+        matrix.setRotate(angle);
+        bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrix,false);
 
         Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);;
         Sticker newSticker = new Sticker(bitmapSticker,50,100,matrix,drawable);
@@ -287,7 +287,6 @@ public class DetailActivity extends Activity {
         final int height = options.outHeight;
         final int width = options.outWidth;
         int inSampleSize = 1;
-
         if (height > Height || width > Width) {
 
             final int halfHeight = height / 2;

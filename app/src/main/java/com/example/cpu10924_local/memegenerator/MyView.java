@@ -34,14 +34,10 @@ public class MyView extends View {
     private float initY;
     private int imageViewWidth;
     private int imageViewHeight;
-    private boolean isRotate;
     private int myviewWidth;
     private int myviewHeight;
     private Bitmap saveBitmap;
     private Canvas savedCanvas;
-
-    private Paint boundRectPaint;
-    private Rect boundRect;
     private boolean isSetting = false;
 
     @Override
@@ -89,16 +85,26 @@ public class MyView extends View {
         {
             myviewHeight = MeasureSpec.getSize(heightMeasureSpec);
             myviewWidth = MeasureSpec.getSize(widthMeasureSpec);
-            if (bmpImage.getHeight() > bmpImage.getWidth())
+            /*if (bmpImage.getHeight() > bmpImage.getWidth())
             {
-                imageViewHeight = myviewHeight;
+              *//*  imageViewHeight = myviewHeight;
                 imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
-                imageViewMatrix.setTranslate(imageViewWidth/10,0);
+                imageViewMatrix.setTranslate(imageViewWidth/10,0);*//*
+                imageViewWidth = myviewWidth;
+                imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+                if  (imageViewHeight >myviewHeight)
+                    imageViewHeight = myviewHeight;
+                imageViewMatrix.setTranslate(0,0);
             }else{
                 imageViewWidth = myviewWidth;
                 imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
                 imageViewMatrix.setTranslate(0,0);
-            }
+            }*/
+            imageViewWidth = myviewWidth;
+            imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+            if  (imageViewHeight >myviewHeight)
+                imageViewHeight = myviewHeight;
+            imageViewMatrix.setTranslate(0,0);
 
             bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
             saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
@@ -125,32 +131,38 @@ public class MyView extends View {
     public void setCanvasBitmap(Bitmap bitmap,int angle)
     {
         bmpImage = bitmap;
-        if (angle!=0)
-        {
-            isRotate = true;
-        }
+
 
     }
 
     public void rotateImage(int angle)
     {
         isSetting = true;
-        isRotate = !isRotate;
 
         matrix = new Matrix();
         matrix.postRotate(angle);
         bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
-        if (imageViewWidth > imageViewHeight)
+       /* if (imageViewWidth > imageViewHeight)
         {
-            imageViewHeight = myviewHeight;
+          *//*  imageViewHeight = myviewHeight;
             imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
-            imageViewMatrix.setTranslate(imageViewWidth/10,0);
+            imageViewMatrix.setTranslate(imageViewWidth/10,0);*//*
+            imageViewWidth = myviewWidth;
+            imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+            if  (imageViewHeight >myviewHeight)
+                imageViewHeight = myviewHeight;
+            imageViewMatrix.setTranslate(0,0);
         }
         else if (imageViewWidth <imageViewHeight){
             imageViewWidth = myviewWidth;
             imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
             imageViewMatrix.setTranslate(0,0);
-        }
+        }*/
+        imageViewWidth = myviewWidth;
+        imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+        if  (imageViewHeight >myviewHeight)
+            imageViewHeight = myviewHeight;
+        imageViewMatrix.setTranslate(0,0);
 
         bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
         saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
@@ -208,68 +220,64 @@ public class MyView extends View {
     }
     public CaptionText getInitTextLocation(float locX,float locY)
     {
-        float x = locX;
-        float y = locY;
-        if (isRotate)
-        {
-            x = x- imageViewWidth/10;
-        }
-        for(int i=0;i<captionTextList.size();i++)
+
+
+        for(int i=captionTextList.size()-1;i>=0;i--)
         {
 
             Rect bound = new Rect();
             captionTextList.get(i).paint.getTextBounds(captionTextList.get(i).content,0,captionTextList.get(i).content.length(),bound);
             float padding = 80;
-            float left = captionTextList.get(i).x ;
-            float top = captionTextList.get(i).y -2*padding;
+            float left = captionTextList.get(i).x -padding;
+            float top = captionTextList.get(i).y- bound.height()-padding;
             float right = captionTextList.get(i).x + bound.width() +padding;
             float bottom = captionTextList.get(i).y + bound.height() +padding;
 
-            if (top <= y && y <=bottom)
+            if (top <= locY && locY <=bottom)
             {
-                if(left <=x && x <=right)
+                if(left <=locX && locX <=right)
                 {
                     initX = locX;
                     initY = locY;
                     indexClickText = i;
+                    indexClickSticker = -1;
                     return captionTextList.get(i);
                 }
             }
 
         }
         indexClickText = -1;
+        indexClickSticker = -1;
         return null;
 
     }
 
     public Sticker getInitStickerLocation(float locX, float locY)
     {
-        float x = locX;
-        float y = locY;
-        if (isRotate)
-        {
-            x = x- imageViewWidth/10;
-        }
-        for(int i=0; i<stickerList.size();++i)
+
+
+        for(int i=stickerList.size()-1; i>=0;i--)
         {
             Bitmap img = stickerList.get(i).bitmap;
             float padding = 80;
-            float left = stickerList.get(i).x;
+            float left = stickerList.get(i).x-padding;
             float right = stickerList.get(i).x + img.getWidth() + padding;
-            float top = stickerList.get(i).y - 2*padding;
+            float top = stickerList.get(i).y - img.getHeight()- padding;
             float bottom = stickerList.get(i).y + img.getHeight() + padding;
-            if (top <= y && y <= bottom)
+            if (top <= locY && locY <= bottom)
             {
-                if (left  <= x && x <= right)
+                if (left  <= locX && locX <= right)
                 {
                     initX = locX;
                     initY = locY;
                     indexClickSticker =  i;
+                    indexClickText = -1;
                     return stickerList.get(i);
                 }
             }
         }
         indexClickSticker = -1;
+        indexClickText = -1;
         return  null;
     }
     public void moveObject(float newX, float newY)
