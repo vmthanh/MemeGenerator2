@@ -40,10 +40,10 @@ public class DetailActivity extends Activity {
     private Bitmap bmpImage;
     private MyView MemeImageView;
     private EditText MemeEditText;
-    private Button SaveImageButton;
+    private ImageView SaveImageButton;
     private Button AddMemeStickerBtn;
     private Button AddCaptionBtn;
-    private Button RotateBtn;
+    private ImageView RotateBtn;
     private Spinner FontSpinner;
     private Button ColorSpinner;
     private static final int CHOOSE_IMAGE_REQUEST = 1;
@@ -56,15 +56,19 @@ public class DetailActivity extends Activity {
             case CHOOSE_IMAGE_REQUEST:
                 if (resultCode == RESULT_OK) {
                     Uri imageUri = data.getData();
+
                     try{
+                        int angle = checkImageOrientation(imageUri.getPath());
                         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                         bmOptions.inJustDecodeBounds = true;
-                        Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
-                        bmOptions.inSampleSize = calculateInSampleSize(bmOptions,250,250);
+                        Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
+                        int newWidth = 250;
+                        int newHeight = (int)newWidth*bmOptions.outHeight/bmOptions.outWidth;
+                        bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
                         bmOptions.inJustDecodeBounds = false;
                         InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                        bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
-                        addMemeSticker(bmpSticker);
+                        bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
+                        addMemeSticker(bmpSticker,angle);
                     }catch (Exception e){
 
                     }
@@ -104,9 +108,13 @@ public class DetailActivity extends Activity {
         }
     }
 
-    private void addMemeSticker(Bitmap bitmapSticker)
+    private void addMemeSticker(Bitmap bitmapSticker,int angle)
     {
+
         Matrix matrix = new Matrix();
+        matrix.setRotate(angle);
+        bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrix,false);
+
         Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);;
         Sticker newSticker = new Sticker(bitmapSticker,50,100,matrix,drawable);
         MemeImageView.setSticker(newSticker);
@@ -182,18 +190,18 @@ public class DetailActivity extends Activity {
             public void onClick(View v) {
                 MemeImageView.DeleteObject();
                 MemeImageView.invalidate();
-                deleteIcon.setVisibility(View.GONE);
-                TextSetting.setVisibility(View.GONE);
+                deleteIcon.setVisibility(View.INVISIBLE);
+                TextSetting.setVisibility(View.INVISIBLE);
             }
         });
     }
 
     private void getRotateButton() {
-        RotateBtn = (Button)findViewById(R.id.RotateBtn);
+        RotateBtn = (ImageView)findViewById(R.id.RotateBtn);
         RotateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MemeImageView.rotateImage();
+                MemeImageView.rotateImage(90);
                 MemeImageView.invalidate();
             }
         });
@@ -240,7 +248,7 @@ public class DetailActivity extends Activity {
     }
 
     private void getSaveButton() {
-       SaveImageButton = (Button)findViewById(R.id.SaveImageButton);
+       SaveImageButton = (ImageView)findViewById(R.id.SaveImageButton);
         SaveImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -279,7 +287,6 @@ public class DetailActivity extends Activity {
         final int height = options.outHeight;
         final int width = options.outWidth;
         int inSampleSize = 1;
-
         if (height > Height || width > Width) {
 
             final int halfHeight = height / 2;
@@ -332,21 +339,29 @@ public class DetailActivity extends Activity {
     private void getMemeImageView(int angle) {
 
         MemeImageView = (MyView)findViewById(R.id.myview);
+        if (angle!=0)
+        {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(angle);
+            bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
+        }
         MemeImageView.setCanvasBitmap(bmpImage, angle);
+      //  MemeImageView.rotateImage(90);
+
         MemeImageView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
-                        captionTextClicked = MemeImageView.getInitTextLocation(event.getRawX(), event.getRawY());
+                        captionTextClicked = MemeImageView.getInitTextLocation(event.getX(), event.getY());
                         if (captionTextClicked == null) {
-                            TextSetting.setVisibility(View.GONE);
-                            deleteIcon.setVisibility(View.GONE);
-                            stickerClicked = MemeImageView.getInitStickerLocation(event.getRawX(), event.getRawY());
+                            TextSetting.setVisibility(View.INVISIBLE);
+
+                            stickerClicked = MemeImageView.getInitStickerLocation(event.getX(), event.getY());
                             if (stickerClicked != null) {
                                 deleteIcon.setVisibility(View.VISIBLE);
                             }else{
-                                deleteIcon.setVisibility(View.GONE);
+                                deleteIcon.setVisibility(View.INVISIBLE);
                             }
                         } else {
 
@@ -373,12 +388,12 @@ public class DetailActivity extends Activity {
                     case MotionEvent.ACTION_MOVE:
                         if (mode == DRAG) {
                             if (captionTextClicked != null) {
-                                float x = event.getRawX();
-                                float y = event.getRawY();
+                                float x = event.getX();
+                                float y = event.getY();
                                 MemeImageView.moveObject(x, y);
                             } else if (stickerClicked != null) {
-                                float x = event.getRawX();
-                                float y = event.getRawY();
+                                float x = event.getX();
+                                float y = event.getY();
                                 MemeImageView.moveObject(x, y);
                             }
 
