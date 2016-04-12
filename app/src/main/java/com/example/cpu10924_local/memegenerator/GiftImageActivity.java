@@ -215,24 +215,24 @@ public class GiftImageActivity extends Activity {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
                         captionTextClicked.paint.setTextSize(100);
-                        captionTextClicked.strokepaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokepaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokepaint.setStrokeWidth(20);
-                        captionTextClicked.strokepaint.setColor(Color.BLACK);
+                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokePaint.setStrokeWidth(20);
+                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     case "Medium":
                         captionTextClicked.paint.setTextSize(200);
-                        captionTextClicked.strokepaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokepaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokepaint.setStrokeWidth(20);
-                        captionTextClicked.strokepaint.setColor(Color.BLACK);
+                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokePaint.setStrokeWidth(20);
+                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     case "Large":
                         captionTextClicked.paint.setTextSize(300);
-                        captionTextClicked.strokepaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokepaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokepaint.setStrokeWidth(20);
-                        captionTextClicked.strokepaint.setColor(Color.BLACK);
+                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokePaint.setStrokeWidth(20);
+                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     default:
 

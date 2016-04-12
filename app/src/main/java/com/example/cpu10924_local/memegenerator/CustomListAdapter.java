@@ -73,7 +73,7 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Cu
 
     }
     private Bitmap decodeSampleBitmapFromUri(String path, int Width, int Height){
-        Bitmap bm = null;
+        Bitmap bm;
         final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(path,options);
@@ -112,7 +112,7 @@ public class CustomListAdapter extends RecyclerView.Adapter<CustomListAdapter.Cu
     private class LoadImage extends AsyncTask<String,Void,Bitmap>{
         private final WeakReference<ImageView> imageViewReference;
         public LoadImage(ImageView imageView){
-            imageViewReference = new WeakReference<ImageView>(imageView);
+            imageViewReference = new WeakReference<>(imageView);
         }
 
         @Override

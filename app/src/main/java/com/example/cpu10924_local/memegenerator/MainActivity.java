@@ -3,6 +3,9 @@ package com.example.cpu10924_local.memegenerator;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -93,7 +96,13 @@ public class MainActivity extends AppCompatActivity {
                 View popUpView = getLayoutInflater().inflate(R.layout.popup, null);
                 mpopup = new PopupWindow(popUpView, ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
                 mpopup.setAnimationStyle(android.R.style.Animation_Dialog);
+
+                mpopup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                mpopup.setOutsideTouchable(true);
                 mpopup.showAtLocation(popUpView, Gravity.BOTTOM, 0, 0);
+
+                // Removes default background.
+
 
                 Button ChooseImageBtn = (Button) popUpView.findViewById(R.id.ChooseImageBtn);
                 ChooseImageBtn.setOnClickListener(new View.OnClickListener() {
@@ -178,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
             if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
                     android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
 
-                // Show an expanation to the user *asynchronously* -- don't block
+                // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
 

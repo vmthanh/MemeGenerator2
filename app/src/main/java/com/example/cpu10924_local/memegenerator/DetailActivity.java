@@ -29,6 +29,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import yuku.ambilwarna.AmbilWarnaDialog;
@@ -63,14 +64,13 @@ public class DetailActivity extends Activity {
                         bmOptions.inJustDecodeBounds = true;
                         Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
                         int newWidth = 250;
-                        int newHeight = (int)newWidth*bmOptions.outHeight/bmOptions.outWidth;
+                        int newHeight = newWidth*bmOptions.outHeight/bmOptions.outWidth;
                         bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
                         bmOptions.inJustDecodeBounds = false;
-                        InputStream inputStream = getContentResolver().openInputStream(imageUri);
                         bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
                         addMemeSticker(bmpSticker,angle);
                     }catch (Exception e){
-
+                        e.printStackTrace();
                     }
                 }
                 break;
@@ -85,7 +85,7 @@ public class DetailActivity extends Activity {
             ExifInterface exifInterface = new ExifInterface(path);
             int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
-            int angle = 0;
+            int angle;
             switch (orientation) {
                 case ExifInterface.ORIENTATION_ROTATE_90:
                     angle = 90;
@@ -112,11 +112,17 @@ public class DetailActivity extends Activity {
     {
 
         Matrix matrix = new Matrix();
-        matrix.setRotate(angle);
+        matrix.postRotate(angle);
+        matrix.setTranslate(50,100);
+        matrix.setScale(1.0f,1.0f);
+
         bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrix,false);
 
-        Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);;
+        Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);
+        drawable.setBounds(0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight());
+
         Sticker newSticker = new Sticker(bitmapSticker,50,100,matrix,drawable);
+
         MemeImageView.setSticker(newSticker);
     }
 
@@ -132,11 +138,6 @@ public class DetailActivity extends Activity {
             try{
                 int angle = checkImageOrientation(imageUri.getPath());
                 BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-                bmOptions.inJustDecodeBounds = true;
-                bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
-                int newWidth = 300;
-                int newHeight = (int)newWidth*bmOptions.outHeight/bmOptions.outWidth;
-                bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
                 bmOptions.inJustDecodeBounds = false;
                 bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(
                         imageUri), null, bmOptions);
@@ -144,17 +145,11 @@ public class DetailActivity extends Activity {
 
             }catch (Exception e)
             {
-
+               e.printStackTrace();
             }
         }else if (imagePath !=null){
             int angle = checkImageOrientation(imagePath);
             final BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(imagePath,options);
-            // Calculate inSampleSize
-            int newWidth = 300 ;
-            int newHeight = (int)newWidth*options.outHeight/options.outWidth;
-            options.inSampleSize = calculateInSampleSize(options, newWidth, newHeight);
             // Decode bitmap with inSampleSize set
             options.inJustDecodeBounds = false;
             bmpImage = BitmapFactory.decodeFile(imagePath, options);
@@ -165,13 +160,10 @@ public class DetailActivity extends Activity {
         }
 
         FontSpinner = (Spinner)findViewById(R.id.FontSpinner);
-        List<String> list = new ArrayList<String>();
+        List<String> list = new ArrayList<>();
         String[] fontSizeArray = getResources().getStringArray(R.array.font_size_array);
-        for (String s:
-                fontSizeArray) {
-            list.add(s);
-        }
-        ArrayAdapter<String> fontSizeAdapter = new ArrayAdapter<String>(getBaseContext(),android.R.layout.simple_spinner_item,list);
+        Collections.addAll(list, fontSizeArray);
+        ArrayAdapter<String> fontSizeAdapter = new ArrayAdapter<>(getBaseContext(),android.R.layout.simple_spinner_item,list);
         fontSizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         FontSpinner.setAdapter(fontSizeAdapter);
         TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
@@ -345,7 +337,7 @@ public class DetailActivity extends Activity {
             matrix.postRotate(angle);
             bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
         }
-        MemeImageView.setCanvasBitmap(bmpImage, angle);
+        MemeImageView.setCanvasBitmap(bmpImage);
       //  MemeImageView.rotateImage(90);
 
         MemeImageView.setOnTouchListener(new View.OnTouchListener() {
@@ -406,7 +398,7 @@ public class DetailActivity extends Activity {
                                     mScaleFactor = newDist / oldDist;
                                     mScaleFactor = Math.max(0.5f, Math.min(mScaleFactor, 3.0f));
                                     Log.v("Scale:",String.valueOf(mScaleFactor));
-                                    MemeImageView.scaleSticker(mScaleFactor, mid.x, mid.y);
+                                    MemeImageView.scaleSticker(mScaleFactor);
                                 }
                             }
 
@@ -457,24 +449,24 @@ public class DetailActivity extends Activity {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
                         captionTextClicked.paint.setTextSize(100);
-                        captionTextClicked.strokepaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokepaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokepaint.setStrokeWidth(20);
-                        captionTextClicked.strokepaint.setColor(Color.BLACK);
+                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokePaint.setStrokeWidth(20);
+                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     case "Medium":
                         captionTextClicked.paint.setTextSize(200);
-                        captionTextClicked.strokepaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokepaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokepaint.setStrokeWidth(20);
-                        captionTextClicked.strokepaint.setColor(Color.BLACK);
+                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokePaint.setStrokeWidth(20);
+                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     case "Large":
                         captionTextClicked.paint.setTextSize(300);
-                        captionTextClicked.strokepaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokepaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokepaint.setStrokeWidth(20);
-                        captionTextClicked.strokepaint.setColor(Color.BLACK);
+                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokePaint.setStrokeWidth(20);
+                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     default:
 
