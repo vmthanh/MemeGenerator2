@@ -306,9 +306,10 @@ public class MyView extends View {
                 if (newWidth <1200 && newHeigt <1200) {
                     updateSticker.matrix.postScale(mScaleFactor, mScaleFactor, updateSticker.x, updateSticker.y);
                     updateSticker.bitmap = getResizedBitmap(updateSticker.bitmap, (int) newWidth, (int) newHeigt);
+                    stickerList.set(indexClickSticker,updateSticker);
                 }
             }
-            stickerList.set(indexClickSticker,updateSticker);
+
         }
     }
 

@@ -2,8 +2,10 @@ package com.example.cpu10924_local.memegenerator;
 
 import android.app.Activity;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -16,6 +18,7 @@ import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -62,10 +65,17 @@ public class DetailActivity extends Activity {
         switch (requestCode) {
             case CHOOSE_IMAGE_REQUEST:
                 if (resultCode == RESULT_OK) {
+                    ProgressDialog loading = new ProgressDialog(DetailActivity.this);
+                    loading.setCancelable(true);
+                    loading.setMessage("Loading sticker");
+                    loading.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    loading.setProgress(0);
+                    loading.setMax(100);
+                    loading.show();
                     Uri imageUri = data.getData();
 
                     try{
-                        int angle = checkImageOrientation(imageUri.getPath());
+                        int angle = checkImageOrientation(getRealFilePath(imageUri));
                         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                         bmOptions.inJustDecodeBounds = true;
                         Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
@@ -78,11 +88,20 @@ public class DetailActivity extends Activity {
                     }catch (Exception e){
                         e.printStackTrace();
                     }
+                    loading.dismiss();
                 }
                 break;
             default:
                 break;
         }
+    }
+
+    private String getRealFilePath(Uri uri)
+    {
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        cursor.moveToFirst();
+        int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+        return cursor.getString(idx);
     }
 
     private int checkImageOrientation(String path)
@@ -117,17 +136,16 @@ public class DetailActivity extends Activity {
     private void addMemeSticker(Bitmap bitmapSticker,int angle)
     {
 
-        Matrix matrix = new Matrix();
-        matrix.postRotate(angle);
-        matrix.setTranslate(50,100);
-        matrix.setScale(1.0f,1.0f);
-
-        bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrix,false);
+        Matrix matrixSticker = new Matrix();
+        matrixSticker.postRotate(angle);
+        bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrixSticker,false);
+        matrixSticker.setScale(1.0f,1.0f);
+        matrixSticker.setTranslate(50,100);
 
         Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);
         drawable.setBounds(0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight());
 
-        Sticker newSticker = new Sticker(bitmapSticker,50,100,matrix,drawable);
+        Sticker newSticker = new Sticker(bitmapSticker,50,100,matrixSticker,drawable);
 
         MemeImageView.setSticker(newSticker);
     }
@@ -137,12 +155,22 @@ public class DetailActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.custom_view);
+        ProgressDialog progressDialog = new ProgressDialog(DetailActivity.this);
+
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCancelable(true);
+        progressDialog.setMessage("Loading sticker");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setProgress(0);
+        progressDialog.setMax(100);
+        progressDialog.show();
+
         Uri imageUri = getIntent().getParcelableExtra("bitmapUri");
         String imagePath = getIntent().getStringExtra("imagePath");
         if (imageUri !=null)
         {
             try{
-                int angle = checkImageOrientation(imageUri.getPath());
+                int angle = checkImageOrientation(getRealFilePath(imageUri));
                 BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                 bmOptions.inJustDecodeBounds = false;
                 bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(
@@ -164,6 +192,8 @@ public class DetailActivity extends Activity {
         }else {
             Log.v("Error:", "Cannot pass parameter");
         }
+        progressDialog.dismiss();
+
         TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
         getFontSpinner();
         getDeleteButton();
@@ -348,7 +378,6 @@ public class DetailActivity extends Activity {
     int mode = NONE;
     float oldDist = 1f;
     float newDist = 1f;
-    PointF mid = new PointF();
 
     private void getMemeImageView(int angle) {
 
@@ -394,8 +423,7 @@ public class DetailActivity extends Activity {
                     case MotionEvent.ACTION_POINTER_DOWN:
                         oldDist = spacing(event);
                         Log.v("Old dis:",String.valueOf(oldDist));
-                        if (oldDist > 2f) {
-                            midPoint(mid, event);
+                        if (oldDist > 10f) {
                             mode = ZOOM;
                         }
                         break;
@@ -416,9 +444,10 @@ public class DetailActivity extends Activity {
                             {
                                 newDist = spacing(event);
                                 Log.v("New dis:",String.valueOf(newDist));
-                                if ((Math.abs(newDist - oldDist)) > 2f) {
+                                Log.v("Distance move",String.valueOf(Math.abs(newDist - oldDist)));
+                                if ((Math.abs(newDist - oldDist)) > 10f) {
                                     mScaleFactor = newDist / oldDist;
-                                    mScaleFactor = Math.max(0.5f, Math.min(mScaleFactor, 3.0f));
+                                    mScaleFactor = Math.max(0.3f, Math.min(mScaleFactor, 3.0f));
                                     Log.v("Scale:",String.valueOf(mScaleFactor));
                                     MemeImageView.scaleSticker(mScaleFactor);
                                 }
@@ -441,12 +470,6 @@ public class DetailActivity extends Activity {
         double res= (double)(x*x) + (double)(y*y);
         return (float)Math.sqrt(res);
     }
-    private void midPoint(PointF point, MotionEvent event) {
-        float x = event.getX(0) + event.getX(1);
-        float y = event.getY(0) + event.getY(1);
-        point.set(x / 2, y / 2);
-    }
-
 
 
 
