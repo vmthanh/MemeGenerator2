@@ -2,6 +2,7 @@ package com.example.cpu10924_local.memegenerator;
 
 import android.app.Activity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,8 +19,11 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -27,6 +31,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
+
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -158,21 +164,21 @@ public class DetailActivity extends Activity {
         }else {
             Log.v("Error:", "Cannot pass parameter");
         }
-
-        FontSpinner = (Spinner)findViewById(R.id.FontSpinner);
-        List<String> list = new ArrayList<>();
-        String[] fontSizeArray = getResources().getStringArray(R.array.font_size_array);
-        Collections.addAll(list, fontSizeArray);
-        ArrayAdapter<String> fontSizeAdapter = new ArrayAdapter<>(getBaseContext(),android.R.layout.simple_spinner_item,list);
-        fontSizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        FontSpinner.setAdapter(fontSizeAdapter);
         TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
+        getFontSpinner();
         getDeleteButton();
-
         getAddCaptionBtn();
         getSticketButton();
         getSaveButton();
         getRotateButton();
+    }
+
+    private void getFontSpinner()
+    {
+        FontSpinner = (Spinner)findViewById(R.id.FontSpinner);
+        ArrayAdapter fontSizeAdapter = ArrayAdapter.createFromResource(DetailActivity.this,R.array.font_size_array,R.layout.my_spinner_item);
+        fontSizeAdapter.setDropDownViewResource(R.layout.my_simple_spinner_dropdown_item);
+        FontSpinner.setAdapter(fontSizeAdapter);
     }
 
     private void getDeleteButton() {
@@ -207,7 +213,7 @@ public class DetailActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-                TextSetting.setVisibility(View.VISIBLE);
+
                 final Typeface blockFont = Typeface.createFromAsset(getAssets(), "fonts/ufonts.com_impact.ttf");
                 Paint paintText = new Paint();
                 paintText.setColor(Color.WHITE);
@@ -222,6 +228,7 @@ public class DetailActivity extends Activity {
                 strokePaint.setAntiAlias(true);
                 CaptionText captionText = new CaptionText("Caption", 50, 100, paintText,strokePaint);
                 MemeImageView.addTextCaption(captionText);
+
             }
         });
 
@@ -297,6 +304,20 @@ public class DetailActivity extends Activity {
 
     private void getEditText() {
         MemeEditText = (EditText)findViewById(R.id.MemeEditText);
+        MemeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId== EditorInfo.IME_ACTION_DONE)
+                {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if(imm.isAcceptingText()) { // verify if the soft keyboard is open
+                        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
         MemeEditText.setText(captionTextClicked.content);
         MemeEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -315,6 +336,7 @@ public class DetailActivity extends Activity {
 
             }
         });
+
     }
 
     CaptionText captionTextClicked;

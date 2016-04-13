@@ -21,6 +21,8 @@
                 android:hint="Text"
                 android:textColor="#ffffff"
                 android:textColorHint="#ffffff"
+                android:inputType="text"
+                android:imeOptions="actionDone"
                 />
 
             <Spinner
