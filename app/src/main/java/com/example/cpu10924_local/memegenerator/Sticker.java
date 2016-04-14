@@ -10,14 +10,11 @@ import java.io.InputStream;
 /**
  * Created by ThanhVo on 3/31/2016.
  */
-public class Sticker {
+public class Sticker extends ObjectDraw{
     public Bitmap bitmap;
-    public float x;
-    public float y;
     public Matrix matrix;
     public Drawable drawable;
     public float mScaleFactor;
-
     public float canvasWidth;
     public float canvasHeight;
 
@@ -27,11 +24,12 @@ public class Sticker {
         this.bitmap = bmp;
         this.x = x;
         this.y = y;
+        this.drawOrder = -1;
         this.matrix = matrix;
         this.drawable = drawable;
         this.mScaleFactor = 1f;
-
         this.canvasWidth = bmp.getWidth();
         this.canvasHeight = bmp.getHeight();
+
     }
 }

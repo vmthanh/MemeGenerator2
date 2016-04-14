@@ -5,6 +5,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -27,6 +29,7 @@ public class MyView extends View {
     private Matrix imageViewMatrix;
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
     public List<Sticker> stickerList = new ArrayList<Sticker>();
+    public List<ObjectDraw> objectDrawList = new ArrayList<>();
     private float initX;
     private float initY;
     private int imageViewWidth;
@@ -50,7 +53,7 @@ public class MyView extends View {
         {
             savedCanvas.drawBitmap(bmpImage, 0,0, null);
 
-            //Draw sticker
+          /*  //Draw sticker
             for(int i=0; i<stickerList.size();i++)
             {
                 savedCanvas.save();
@@ -66,6 +69,24 @@ public class MyView extends View {
                 savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).strokePaint);
                 savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
 
+            }*/
+            Collections.sort(this.objectDrawList, ObjectDraw.drawOrderComparator);
+            for(int i=0; i<objectDrawList.size();++i)
+            {
+                if (objectDrawList.get(i) instanceof CaptionText)
+                {
+                    CaptionText captionText = (CaptionText)objectDrawList.get(i);
+                    savedCanvas.drawText(captionText.content.toUpperCase(), captionText.x, captionText.y, captionText.strokePaint);
+                    savedCanvas.drawText(captionText.content.toUpperCase(), captionText.x, captionText.y, captionText.paint);
+
+                }else{
+                    Sticker sticker = (Sticker)objectDrawList.get(i);
+                    savedCanvas.save();
+                    savedCanvas.setMatrix(sticker.matrix);
+                    savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor);
+                    sticker.drawable.draw(savedCanvas);
+                    savedCanvas.restore();
+                }
             }
             canvas.drawBitmap(saveBitmap,imageViewMatrix,null);
         }
@@ -245,8 +266,11 @@ public class MyView extends View {
     public void setSticker(Sticker sticker)
     {
         stickerList.add(sticker);
+        objectDrawList.add(sticker);
         invalidate();
     }
+
+
 
     public void addTextCaption(CaptionText textCaption)
     {
@@ -271,6 +295,7 @@ public class MyView extends View {
 
         }
         captionTextList.add(textCaption);
+        objectDrawList.add(textCaption);
         invalidate();
     }
 
@@ -279,35 +304,41 @@ public class MyView extends View {
     {
         if (stickerClicked!=null)
         {
-            stickerList.remove(stickerClicked);
+            objectDrawList.remove(stickerClicked);
         }
         if (captionTextClicked !=null)
         {
-            captionTextList.remove(captionTextClicked);
+            objectDrawList.remove(captionTextClicked);
         }
     }
     public CaptionText getInitTextLocation(float locX,float locY)
     {
-        for(int i=captionTextList.size()-1;i>=0;i--)
+        for(int i=objectDrawList.size()-1;i>=0;i--)
         {
-
-            Rect bound = new Rect();
-            captionTextList.get(i).paint.getTextBounds(captionTextList.get(i).content,0,captionTextList.get(i).content.length(),bound);
-            float padding = 50;
-            float left = captionTextList.get(i).x -padding;
-            float top = captionTextList.get(i).y- bound.height()-padding;
-            float right = captionTextList.get(i).x + bound.width() +2*padding;
-            float bottom = captionTextList.get(i).y + bound.height() +padding;
-
-            if (top <= locY && locY <=bottom)
+            if (objectDrawList.get(i) instanceof CaptionText)
             {
-                if(left <=locX && locX <=right)
+                CaptionText captionText = (CaptionText)objectDrawList.get(i);
+                Rect bound = new Rect();
+                captionText.paint.getTextBounds(captionText.content,0,captionText.content.length(),bound);
+                float padding = 50;
+                float left = captionText.x -padding;
+                float top = captionText.y- bound.height()-padding;
+                float right = captionText.x + bound.width() +2*padding;
+                float bottom = captionText.y + bound.height() ;
+
+                if (top <= locY && locY <=bottom)
                 {
-                    initX = locX;
-                    initY = locY;
-                    return captionTextList.get(i);
+                    if(left <=locX && locX <=right)
+                    {
+                        initX = locX;
+                        initY = locY;
+                        objectDrawList.get(i).sendToFront(objectDrawList);
+                        //return captionTextList.get(i);
+                        return (CaptionText)objectDrawList.get(i);
+                    }
                 }
             }
+
 
         }
         return null;
@@ -316,23 +347,30 @@ public class MyView extends View {
 
     public Sticker getInitStickerLocation(float locX, float locY)
     {
-        for(int i=stickerList.size()-1; i>=0;i--)
+        for(int i=objectDrawList.size()-1; i>=0;i--)
         {
-            Bitmap img = stickerList.get(i).bitmap;
-            float padding = 80;
-            float left = stickerList.get(i).x-padding;
-            float right = stickerList.get(i).x + stickerList.get(i).canvasWidth +padding;
-            float top = stickerList.get(i).y - padding;
-            float bottom = stickerList.get(i).y + stickerList.get(i).canvasHeight +padding;
-            if (top <= locY && locY <= bottom)
+            if (objectDrawList.get(i) instanceof Sticker)
             {
-                if (left  <= locX && locX <= right)
+                Sticker sticker = (Sticker) objectDrawList.get(i);
+                Bitmap img = sticker.bitmap;
+                float padding = 80;
+                float left = sticker.x-padding;
+                float right = sticker.x + sticker.canvasWidth +padding;
+                float top = sticker.y - padding;
+                float bottom = sticker.y + sticker.canvasHeight +padding;
+                if (top <= locY && locY <= bottom)
                 {
-                    initX = locX;
-                    initY = locY;
-                    return stickerList.get(i);
+                    if (left  <= locX && locX <= right)
+                    {
+                        initX = locX;
+                        initY = locY;
+                        objectDrawList.get(i).sendToFront(objectDrawList);
+                        // return stickerList.get(i);
+                        return (Sticker) objectDrawList.get(i);
+                    }
                 }
             }
+
         }
 
         return  null;
