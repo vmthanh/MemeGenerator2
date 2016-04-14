@@ -3,7 +3,6 @@ package com.example.cpu10924_local.memegenerator;
 import android.content.ContentValues;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Rect;
@@ -11,6 +10,7 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
@@ -27,8 +27,6 @@ public class MyView extends View {
     private Matrix imageViewMatrix;
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
     public List<Sticker> stickerList = new ArrayList<Sticker>();
-    private int indexClickText = -1;
-    private int indexClickSticker = -1;
     private float initX;
     private float initY;
     private int imageViewWidth;
@@ -39,38 +37,49 @@ public class MyView extends View {
     private Canvas savedCanvas;
     private boolean isSetting = false;
 
+    public interface MyViewCustomListener{
+         void onCaptionTextClicked(CaptionText captionText);
+         void onStickerTextClicked(Sticker sticker);
+    }
+    private MyViewCustomListener listener;
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
+        if (bmpImage!=null)
+        {
             savedCanvas.drawBitmap(bmpImage, 0,0, null);
 
-        //Draw sticker
-        for(int i=0; i<stickerList.size();i++)
-        {
-            savedCanvas.save();
-            savedCanvas.setMatrix(stickerList.get(i).matrix);
-            stickerList.get(i).drawable.draw(savedCanvas);
-            savedCanvas.restore();
+            //Draw sticker
+            for(int i=0; i<stickerList.size();i++)
+            {
+                savedCanvas.save();
+                savedCanvas.setMatrix(stickerList.get(i).matrix);
+                savedCanvas.scale(stickerList.get(i).mScaleFactor,stickerList.get(i).mScaleFactor);
+                stickerList.get(i).drawable.draw(savedCanvas);
+                savedCanvas.restore();
+            }
+
+            //Draw text
+            for (int i = 0; i < captionTextList.size(); i++) {
+
+                savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).strokePaint);
+                savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
+
+            }
+            canvas.drawBitmap(saveBitmap,imageViewMatrix,null);
         }
 
-        //Draw text
-        for (int i = 0; i < captionTextList.size(); i++) {
-
-            savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).strokePaint);
-            savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
-
-        }
 
 
-
-        canvas.drawBitmap(saveBitmap,imageViewMatrix,null);
-
+    }
+    public void setOnTouchCustomView(MyViewCustomListener listener)
+    {
+        this.listener = listener;
     }
 
     public Bitmap getResizedBitmap(Bitmap bmp, int newWidth, int newHeight)
     {
-
         return Bitmap.createScaledBitmap(bmp,newWidth,newHeight,false);
     }
 
@@ -78,36 +87,93 @@ public class MyView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        if (!isSetting)
-        {
             myViewHeight = MeasureSpec.getSize(heightMeasureSpec);
             myViewWidth = MeasureSpec.getSize(widthMeasureSpec);
-            if (bmpImage.getHeight() > bmpImage.getWidth())
-            {
-                imageViewHeight = myViewHeight;
-                imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
-                int locX = myViewWidth /2-imageViewWidth/2;
-                int locY = 0;
-                imageViewMatrix.setTranslate(locX,locY);
-            }else{
-                imageViewWidth = myViewWidth;
-                imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
-                imageViewMatrix.setTranslate(0,0);
-            }
-
-            bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
-            saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
-            savedCanvas = new Canvas(saveBitmap);
-
-        }
-
 
     }
+    private CaptionText captionTextClicked = null;
+    private Sticker stickerClicked = null;
+    private float mScaleFactor = 1f;
+    static final int NONE = 100;
+    static final int DRAG = 200;
+    static final int ZOOM = 300;
+    int mode = NONE;
+    float oldDist = 1f;
+    float newDist = 1f;
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        super.onTouchEvent(event);
+            switch (event.getAction() & MotionEvent.ACTION_MASK){
+                case MotionEvent.ACTION_DOWN:
+                    if (listener!=null)
+                    {
+                        captionTextClicked = getInitTextLocation(event.getX(),event.getY());
+                        if (captionTextClicked == null)
+                        {
+                            listener.onCaptionTextClicked(null);
+                            stickerClicked = getInitStickerLocation(event.getX(),event.getY());
+                            if (stickerClicked!=null)
+                            {
+                                listener.onStickerTextClicked(stickerClicked);
+                            }else{
+                                listener.onStickerTextClicked(null);
+                            }
+                        }else{
+                            listener.onCaptionTextClicked(captionTextClicked);
+                        }
+                    }
+                    mode = DRAG;
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP:
+                    mode = NONE;
+                    oldDist = newDist = 1f;
+                    break;
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    oldDist = spacing(event);
+                    Log.v("Old dis:",String.valueOf(oldDist));
+                    if (oldDist > 5f) {
+                        mode = ZOOM;
 
-    public MyView(Context context,AttributeSet attrs)
+                    }
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    if (mode == DRAG) {
+                            float x = event.getX();
+                            float y = event.getY();
+                            this.moveObject(x, y);
+                    } else if (mode == ZOOM) {
+                        if(spacing(event)!=newDist)
+                        {
+                            newDist = spacing(event);
+                            Log.v("New dis:",String.valueOf(newDist));
+                            Log.v("Distance move",String.valueOf(Math.abs(newDist - oldDist)));
+                            if ((Math.abs(newDist - oldDist)) > 10f) {
+                                mScaleFactor = (newDist / oldDist);
+                                mScaleFactor = Math.max(0.3f, Math.min(mScaleFactor, 3.0f));
+                                Log.v("Scale:",String.valueOf(mScaleFactor));
+                                this.scaleSticker(mScaleFactor);
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        invalidate();
+        return true;
+    }
+
+    private float spacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        double res= (double)(x*x) + (double)(y*y);
+        return (float)Math.sqrt(res);
+    }
+
+    public MyView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
-
         init();
     }
 
@@ -119,16 +185,38 @@ public class MyView extends View {
     }
     public void setCanvasBitmap(Bitmap bitmap)
     {
-        bmpImage = bitmap;
 
+        bmpImage = bitmap;
+        if (bmpImage.getHeight() > bmpImage.getWidth())
+        {
+            imageViewHeight = myViewHeight;
+            imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
+            int locX = myViewWidth /2-imageViewWidth/2;
+            int locY = 0;
+            imageViewMatrix.reset();
+            imageViewMatrix.setTranslate(locX,locY);
+        }else{
+            imageViewWidth = myViewWidth;
+            imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+            imageViewMatrix.reset();
+            imageViewMatrix.setTranslate(0,0);
+        }
+        bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
+        if (saveBitmap==null)
+        {
+            saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
+        }
+        if (savedCanvas==null)
+        {
+            savedCanvas = new Canvas(saveBitmap);
+        }
+        invalidate();
 
     }
 
-
-
     public void rotateImage(int angle)
     {
-        isSetting = true;
+
 
         matrix = new Matrix();
         matrix.postRotate(angle);
@@ -140,12 +228,14 @@ public class MyView extends View {
             imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
             int locX = myViewWidth /2-imageViewWidth/2;
             int locY = 0;
+            imageViewMatrix.reset();
             imageViewMatrix.setTranslate(locX,locY);
 
         }
         else if (imageViewWidth <imageViewHeight){
             imageViewWidth = myViewWidth;
             imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+            imageViewMatrix.reset();
             imageViewMatrix.setTranslate(0,0);
         }
         bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
@@ -154,16 +244,15 @@ public class MyView extends View {
     }
     public void setSticker(Sticker sticker)
     {
-        isSetting = true;
-
         stickerList.add(sticker);
+        invalidate();
     }
 
     public void addTextCaption(CaptionText textCaption)
     {
-        isSetting = true;
+
         Rect bound = new Rect();
-       textCaption.paint.getTextBounds(textCaption.content,0,textCaption.content.length(),bound);
+        textCaption.paint.getTextBounds(textCaption.content,0,textCaption.content.length(),bound);
         //Move text to center
         textCaption.x = imageViewWidth /2 -bound.width()/2;
         switch (captionTextList.size())
@@ -188,21 +277,17 @@ public class MyView extends View {
 
     public void DeleteObject()
     {
-        if (indexClickText!= -1)
+        if (stickerClicked!=null)
         {
-            captionTextList.remove(indexClickText);
-
+            stickerList.remove(stickerClicked);
         }
-        if (indexClickSticker !=-1)
+        if (captionTextClicked !=null)
         {
-            stickerList.remove(indexClickSticker);
+            captionTextList.remove(captionTextClicked);
         }
-        indexClickText = indexClickSticker = -1;
     }
     public CaptionText getInitTextLocation(float locX,float locY)
     {
-
-
         for(int i=captionTextList.size()-1;i>=0;i--)
         {
 
@@ -220,95 +305,72 @@ public class MyView extends View {
                 {
                     initX = locX;
                     initY = locY;
-                    indexClickText = i;
-                    indexClickSticker = -1;
                     return captionTextList.get(i);
                 }
             }
 
         }
-        indexClickText = -1;
-        indexClickSticker = -1;
         return null;
 
     }
 
     public Sticker getInitStickerLocation(float locX, float locY)
     {
-
-
         for(int i=stickerList.size()-1; i>=0;i--)
         {
             Bitmap img = stickerList.get(i).bitmap;
             float padding = 80;
             float left = stickerList.get(i).x-padding;
-            float right = stickerList.get(i).x + img.getWidth() + padding;
-            float top = stickerList.get(i).y - img.getHeight()- padding;
-            float bottom = stickerList.get(i).y + img.getHeight() + padding;
+            float right = stickerList.get(i).x + stickerList.get(i).canvasWidth +padding;
+            float top = stickerList.get(i).y - padding;
+            float bottom = stickerList.get(i).y + stickerList.get(i).canvasHeight +padding;
             if (top <= locY && locY <= bottom)
             {
                 if (left  <= locX && locX <= right)
                 {
                     initX = locX;
                     initY = locY;
-                    indexClickSticker =  i;
-                    indexClickText = -1;
                     return stickerList.get(i);
                 }
             }
         }
-        indexClickSticker = -1;
-        indexClickText = -1;
+
         return  null;
     }
     public void moveObject(float newX, float newY)
     {
-
-        if (indexClickText !=-1)
+        if (captionTextClicked !=null)
         {
-
-            CaptionText updateCaptionText = captionTextList.get(indexClickText);
             float deltaX = newX - initX;
             float deltaY = newY - initY;
-            updateCaptionText.x +=deltaX;
-            updateCaptionText.y +=deltaY;
+            captionTextClicked.x +=deltaX;
+            captionTextClicked.y +=deltaY;
             initX = newX;
             initY = newY;
-            captionTextList.set(indexClickText, updateCaptionText);
-
         }
-        if (indexClickSticker !=-1)
+        if (stickerClicked !=null)
         {
-            Sticker updateSticker = stickerList.get(indexClickSticker);
             float deltaX = newX - initX;
             float deltaY = newY - initY;
-
-            updateSticker.x +=deltaX;
-            updateSticker.y +=deltaY;
-            updateSticker.matrix.postTranslate(deltaX,deltaY);
+            stickerClicked.x +=deltaX;
+            stickerClicked.y +=deltaY;
+            stickerClicked.matrix.postTranslate(deltaX,deltaY);
             initX = newX;
             initY = newY;
-            stickerList.set(indexClickSticker, updateSticker);
         }
 
     }
 
+
     public void scaleSticker(float mScaleFactor)
     {
 
-        if (indexClickSticker != -1)
+        if (stickerClicked != null)
         {
-            Sticker updateSticker= stickerList.get(indexClickSticker);
-            float newWidth = updateSticker.bitmap.getWidth()*mScaleFactor;
-            float newHeigt = updateSticker.bitmap.getHeight()*mScaleFactor;
-            if(newWidth >200 && newHeigt >200)
-            {
-                if (newWidth <1200 && newHeigt <1200) {
-                    updateSticker.matrix.postScale(mScaleFactor, mScaleFactor, updateSticker.x, updateSticker.y);
-                    updateSticker.bitmap = getResizedBitmap(updateSticker.bitmap, (int) newWidth, (int) newHeigt);
-                    stickerList.set(indexClickSticker,updateSticker);
-                }
-            }
+            stickerClicked.mScaleFactor = mScaleFactor;
+            stickerClicked.canvasHeight = mScaleFactor*stickerClicked.bitmap.getHeight();
+            stickerClicked.canvasWidth = mScaleFactor*stickerClicked.bitmap.getWidth();
+
 
         }
     }
@@ -327,6 +389,4 @@ public class MyView extends View {
             Log.v("Error: ", e.toString());
         }
     }
-
-
 }

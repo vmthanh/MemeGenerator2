@@ -17,6 +17,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
@@ -36,6 +37,7 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -57,6 +59,8 @@ public class DetailActivity extends Activity {
     private Spinner FontSpinner;
     private Button ColorSpinner;
     private static final int CHOOSE_IMAGE_REQUEST = 1;
+    private static final int LOAD_IMAGE_VIEW = 2;
+    private static final int LOAD_STICKER_VIEW = 3;
     private LinearLayout TextSetting;
     private ImageView deleteIcon;
     @Override
@@ -65,30 +69,13 @@ public class DetailActivity extends Activity {
         switch (requestCode) {
             case CHOOSE_IMAGE_REQUEST:
                 if (resultCode == RESULT_OK) {
-                    ProgressDialog loading = new ProgressDialog(DetailActivity.this);
-                    loading.setCancelable(true);
-                    loading.setMessage("Loading sticker");
-                    loading.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                    loading.setProgress(0);
-                    loading.setMax(100);
-                    loading.show();
                     Uri imageUri = data.getData();
-
                     try{
                         int angle = checkImageOrientation(getRealFilePath(imageUri));
-                        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-                        bmOptions.inJustDecodeBounds = true;
-                        Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
-                        int newWidth = 250;
-                        int newHeight = newWidth*bmOptions.outHeight/bmOptions.outWidth;
-                        bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
-                        bmOptions.inJustDecodeBounds = false;
-                        bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri), null, bmOptions);
-                        addMemeSticker(bmpSticker,angle);
+                        new LoadImageToView(angle,LOAD_STICKER_VIEW).execute(getRealFilePath(imageUri));
                     }catch (Exception e){
                         e.printStackTrace();
                     }
-                    loading.dismiss();
                 }
                 break;
             default:
@@ -139,15 +126,66 @@ public class DetailActivity extends Activity {
         Matrix matrixSticker = new Matrix();
         matrixSticker.postRotate(angle);
         bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrixSticker,false);
-        matrixSticker.setScale(1.0f,1.0f);
         matrixSticker.setTranslate(50,100);
 
         Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);
         drawable.setBounds(0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight());
 
-        Sticker newSticker = new Sticker(bitmapSticker,50,100,matrixSticker,drawable);
+        Sticker newSticker = new Sticker(bitmapSticker,50,100,matrixSticker,drawable,1);
 
         MemeImageView.setSticker(newSticker);
+    }
+
+
+
+    private class LoadImageToView extends AsyncTask<String,Void, Bitmap>{
+        ProgressDialog progressDialog = new ProgressDialog(DetailActivity.this);
+        private int typeLoad;
+        private int angle;
+        public LoadImageToView(int angle, int typeLoad)
+        {
+            this.angle = angle;
+            this.typeLoad = typeLoad;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            if (typeLoad == LOAD_IMAGE_VIEW)
+            {
+                bmpImage = bitmap;
+                getMemeImageView(angle);
+            }else{
+                addMemeSticker(bitmap,angle);
+            }
+            progressDialog.dismiss();
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... params) {
+                Bitmap loadBitmap;
+                BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                bmOptions.inJustDecodeBounds = true;
+                loadBitmap = BitmapFactory.decodeFile(params[0], bmOptions);
+                int newWidth = 300;
+                int newHeight = newWidth*bmOptions.outHeight/bmOptions.outWidth;
+                bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
+                bmOptions.inJustDecodeBounds = false;
+                loadBitmap = BitmapFactory.decodeFile(params[0], bmOptions);
+                return loadBitmap;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setCancelable(true);
+            progressDialog.setMessage("Loading image");
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setProgress(0);
+            progressDialog.setMax(100);
+            progressDialog.show();
+        }
+
     }
 
 
@@ -155,27 +193,13 @@ public class DetailActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.custom_view);
-        ProgressDialog progressDialog = new ProgressDialog(DetailActivity.this);
-
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressDialog.setCancelable(true);
-        progressDialog.setMessage("Loading sticker");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressDialog.setProgress(0);
-        progressDialog.setMax(100);
-        progressDialog.show();
-
         Uri imageUri = getIntent().getParcelableExtra("bitmapUri");
         String imagePath = getIntent().getStringExtra("imagePath");
         if (imageUri !=null)
         {
             try{
                 int angle = checkImageOrientation(getRealFilePath(imageUri));
-                BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-                bmOptions.inJustDecodeBounds = false;
-                bmpImage = BitmapFactory.decodeStream(getContentResolver().openInputStream(
-                        imageUri), null, bmOptions);
-                getMemeImageView(angle);
+                new LoadImageToView(angle,LOAD_IMAGE_VIEW).execute(getRealFilePath(imageUri));
 
             }catch (Exception e)
             {
@@ -183,16 +207,12 @@ public class DetailActivity extends Activity {
             }
         }else if (imagePath !=null){
             int angle = checkImageOrientation(imagePath);
-            final BitmapFactory.Options options = new BitmapFactory.Options();
-            // Decode bitmap with inSampleSize set
-            options.inJustDecodeBounds = false;
-            bmpImage = BitmapFactory.decodeFile(imagePath, options);
-            getMemeImageView(angle);
+            new LoadImageToView(angle,LOAD_IMAGE_VIEW).execute(imagePath);
 
         }else {
             Log.v("Error:", "Cannot pass parameter");
         }
-        progressDialog.dismiss();
+
 
         TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
         getFontSpinner();
@@ -370,17 +390,8 @@ public class DetailActivity extends Activity {
     }
 
     CaptionText captionTextClicked;
-    Sticker stickerClicked;
-    private float mScaleFactor = 1.f;
-    static final int NONE = 100;
-    static final int DRAG = 200;
-    static final int ZOOM = 300;
-    int mode = NONE;
-    float oldDist = 1f;
-    float newDist = 1f;
 
     private void getMemeImageView(int angle) {
-
         MemeImageView = (MyView)findViewById(R.id.myview);
         if (angle!=0)
         {
@@ -389,89 +400,35 @@ public class DetailActivity extends Activity {
             bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
         }
         MemeImageView.setCanvasBitmap(bmpImage);
-      //  MemeImageView.rotateImage(90);
-
-        MemeImageView.setOnTouchListener(new View.OnTouchListener() {
+        MemeImageView.setOnTouchCustomView(new MyView.MyViewCustomListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        captionTextClicked = MemeImageView.getInitTextLocation(event.getX(), event.getY());
-                        if (captionTextClicked == null) {
-                            TextSetting.setVisibility(View.INVISIBLE);
-
-                            stickerClicked = MemeImageView.getInitStickerLocation(event.getX(), event.getY());
-                            if (stickerClicked != null) {
-                                deleteIcon.setVisibility(View.VISIBLE);
-                            }else{
-                                deleteIcon.setVisibility(View.INVISIBLE);
-                            }
-                        } else {
-
-                            deleteIcon.setVisibility(View.VISIBLE);
-                            TextSetting.setVisibility(View.VISIBLE);
-                            getEditText();
-                            addItemOnSpiner();
-                            getColorSpinner();
-                        }
-                        mode = DRAG;
-                        break;
-                    case MotionEvent.ACTION_UP: //first finger lifted
-                    case MotionEvent.ACTION_POINTER_UP: //second finger lifted
-                        mode = NONE;
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        oldDist = spacing(event);
-                        Log.v("Old dis:",String.valueOf(oldDist));
-                        if (oldDist > 10f) {
-                            mode = ZOOM;
-                        }
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        if (mode == DRAG) {
-                            if (captionTextClicked != null) {
-                                float x = event.getX();
-                                float y = event.getY();
-                                MemeImageView.moveObject(x, y);
-                            } else if (stickerClicked != null) {
-                                float x = event.getX();
-                                float y = event.getY();
-                                MemeImageView.moveObject(x, y);
-                            }
-
-                        } else if (mode == ZOOM) {
-                            if(spacing(event)!=newDist)
-                            {
-                                newDist = spacing(event);
-                                Log.v("New dis:",String.valueOf(newDist));
-                                Log.v("Distance move",String.valueOf(Math.abs(newDist - oldDist)));
-                                if ((Math.abs(newDist - oldDist)) > 10f) {
-                                    mScaleFactor = newDist / oldDist;
-                                    mScaleFactor = Math.max(0.3f, Math.min(mScaleFactor, 3.0f));
-                                    Log.v("Scale:",String.valueOf(mScaleFactor));
-                                    MemeImageView.scaleSticker(mScaleFactor);
-                                }
-                            }
-
-                        }
-                        break;
-                    default:
-                        break;
+            public void onCaptionTextClicked(CaptionText captionText) {
+                captionTextClicked = captionText;
+                if (captionTextClicked ==null)
+                {
+                    TextSetting.setVisibility(View.INVISIBLE);
+                }else{
+                    deleteIcon.setVisibility(View.VISIBLE);
+                    TextSetting.setVisibility(View.VISIBLE);
+                    getEditText();
+                    addItemOnSpiner();
+                    getColorSpinner();
                 }
-                MemeImageView.invalidate();
-                return true;
+            }
+
+            @Override
+            public void onStickerTextClicked(Sticker sticker) {
+                if (sticker!=null)
+                {
+                    deleteIcon.setVisibility(View.VISIBLE);
+
+                }else{
+                    deleteIcon.setVisibility(View.INVISIBLE);
+                }
             }
         });
 
     }
-    private float spacing(MotionEvent event) {
-        float x = event.getX(0) - event.getX(1);
-        float y = event.getY(0) - event.getY(1);
-        double res= (double)(x*x) + (double)(y*y);
-        return (float)Math.sqrt(res);
-    }
-
-
 
     public void addItemOnSpiner() {
         switch ((int)captionTextClicked.paint.getTextSize())
