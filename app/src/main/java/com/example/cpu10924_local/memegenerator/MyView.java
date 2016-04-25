@@ -147,11 +147,13 @@ public class MyView extends View {
                             if (stickerClicked!=null)
                             {
                                 listener.onStickerTextClicked(stickerClicked);
+                                stickerClicked.sendToFront(objectDrawList);
                             }else{
                                 listener.onStickerTextClicked(null);
                             }
                         }else{
                             listener.onCaptionTextClicked(captionTextClicked);
+                            captionTextClicked.sendToFront(objectDrawList);
                         }
                     }
                     mode = DRAG;
@@ -338,7 +340,7 @@ public class MyView extends View {
                 float left = captionText.x -padding;
                 float top = captionText.y- bound.height()-padding;
                 float right = captionText.x + bound.width() +2*padding;
-                float bottom = captionText.y + bound.height() ;
+                float bottom = captionText.y  ;
 
                 if (top <= locY && locY <=bottom)
                 {
@@ -346,8 +348,6 @@ public class MyView extends View {
                     {
                         initX = locX;
                         initY = locY;
-                        objectDrawList.get(i).sendToFront(objectDrawList);
-                        //return captionTextList.get(i);
                         return (CaptionText)objectDrawList.get(i);
                     }
                 }
@@ -378,8 +378,6 @@ public class MyView extends View {
                     {
                         initX = locX;
                         initY = locY;
-                        objectDrawList.get(i).sendToFront(objectDrawList);
-                        // return stickerList.get(i);
                         return (Sticker) objectDrawList.get(i);
                     }
                 }
