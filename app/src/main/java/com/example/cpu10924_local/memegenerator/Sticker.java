@@ -15,6 +15,7 @@ public class Sticker extends ObjectDraw{
     public Matrix matrix;
     public Drawable drawable;
     public float mScaleFactor;
+    public float mStoreScaleFactor;
     public float canvasWidth;
     public float canvasHeight;
 
@@ -28,6 +29,7 @@ public class Sticker extends ObjectDraw{
         this.matrix = matrix;
         this.drawable = drawable;
         this.mScaleFactor = 1f;
+        this.mStoreScaleFactor = 1f;
         this.canvasWidth = bmp.getWidth();
         this.canvasHeight = bmp.getHeight();
 

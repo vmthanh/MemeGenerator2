@@ -129,10 +129,21 @@ public class MyView extends View {
                     if (listener!=null)
                     {
                         captionTextClicked = getInitTextLocation(event.getX(),event.getY());
+                        stickerClicked = getInitStickerLocation(event.getX(),event.getY());
+                        if (captionTextClicked !=null && stickerClicked !=null)
+                        {
+                            if (captionTextClicked.drawOrder > stickerClicked.drawOrder)
+                            {
+                                stickerClicked = null;
+                            }
+                            else{
+                                captionTextClicked = null;
+                            }
+                        }
                         if (captionTextClicked == null)
                         {
                             listener.onCaptionTextClicked(null);
-                            stickerClicked = getInitStickerLocation(event.getX(),event.getY());
+                            //stickerClicked = getInitStickerLocation(event.getX(),event.getY());
                             if (stickerClicked!=null)
                             {
                                 listener.onStickerTextClicked(stickerClicked);
@@ -149,13 +160,17 @@ public class MyView extends View {
                 case MotionEvent.ACTION_POINTER_UP:
                     mode = NONE;
                     oldDist = newDist = 1f;
+                    if (stickerClicked!=null)
+                    {
+                        stickerClicked.mStoreScaleFactor = stickerClicked.mScaleFactor;
+                    }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
+
                     oldDist = spacing(event);
                     Log.v("Old dis:",String.valueOf(oldDist));
                     if (oldDist > 5f) {
                         mode = ZOOM;
-
                     }
                     break;
                 case MotionEvent.ACTION_MOVE:
@@ -171,7 +186,6 @@ public class MyView extends View {
                             Log.v("Distance move",String.valueOf(Math.abs(newDist - oldDist)));
                             if ((Math.abs(newDist - oldDist)) > 10f) {
                                 mScaleFactor = (newDist / oldDist);
-                                mScaleFactor = Math.max(0.3f, Math.min(mScaleFactor, 3.0f));
                                 Log.v("Scale:",String.valueOf(mScaleFactor));
                                 this.scaleSticker(mScaleFactor);
                             }
@@ -405,10 +419,12 @@ public class MyView extends View {
 
         if (stickerClicked != null)
         {
-            stickerClicked.mScaleFactor = mScaleFactor;
-            stickerClicked.canvasHeight = mScaleFactor*stickerClicked.bitmap.getHeight();
-            stickerClicked.canvasWidth = mScaleFactor*stickerClicked.bitmap.getWidth();
-
+                stickerClicked.mScaleFactor = mScaleFactor;
+                if (stickerClicked.mStoreScaleFactor != 1f)
+                      stickerClicked.mScaleFactor *=stickerClicked.mStoreScaleFactor;
+                stickerClicked.mScaleFactor = Math.max(0.3f, Math.min(stickerClicked.mScaleFactor, 3.0f));
+                stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmap.getHeight();
+                stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmap.getWidth();
 
         }
     }
