@@ -20,7 +20,7 @@ public class Sticker extends ObjectDraw{
     public float canvasHeight;
 
 
-    public Sticker(Bitmap bmp, float x, float y,Matrix matrix, Drawable drawable, float mScaleFactor)
+    public Sticker(Bitmap bmp, float x, float y,Matrix matrix, Drawable drawable)
     {
         this.bitmap = bmp;
         this.x = x;

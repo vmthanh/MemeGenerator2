@@ -93,7 +93,7 @@ public class GiftImageActivity extends Activity {
     {
         Matrix matrix = new Matrix();
         Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);;
-        Sticker newSticker = new Sticker(bitmapSticker,50,100,matrix,drawable,1);
+        Sticker newSticker = new Sticker(bitmapSticker,100,100,matrix,drawable);
         myGifView.setSticker(newSticker);
     }
     private int calculateInSampleSize(BitmapFactory.Options options,int Width, int Height)

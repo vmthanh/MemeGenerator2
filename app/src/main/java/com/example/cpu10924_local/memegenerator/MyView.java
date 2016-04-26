@@ -83,7 +83,7 @@ public class MyView extends View {
                     Sticker sticker = (Sticker)objectDrawList.get(i);
                     savedCanvas.save();
                     savedCanvas.setMatrix(sticker.matrix);
-                    savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor);
+                    savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmap.getWidth()/2, sticker.bitmap.getHeight()/2);
                     sticker.drawable.draw(savedCanvas);
                     savedCanvas.restore();
                 }

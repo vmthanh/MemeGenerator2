@@ -126,12 +126,12 @@ public class DetailActivity extends Activity {
         Matrix matrixSticker = new Matrix();
         matrixSticker.postRotate(angle);
         bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrixSticker,false);
-        matrixSticker.setTranslate(50,100);
+        matrixSticker.setTranslate(100,100);
 
         Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);
         drawable.setBounds(0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight());
 
-        Sticker newSticker = new Sticker(bitmapSticker,50,100,matrixSticker,drawable,1);
+        Sticker newSticker = new Sticker(bitmapSticker,100,100,matrixSticker,drawable);
 
         MemeImageView.setSticker(newSticker);
     }
