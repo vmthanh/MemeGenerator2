@@ -89,13 +89,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal"
-            android:weightSum="3">
-            <ImageView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/RotateBtn"
-                android:src="@drawable/rotate_icon"
-                android:layout_weight="1"/>
+            android:weightSum="2">
+
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"

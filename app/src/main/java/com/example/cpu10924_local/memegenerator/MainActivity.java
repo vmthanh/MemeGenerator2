@@ -283,7 +283,9 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == RESULT_OK)
                 {
                     Uri videoUri = data.getData();
+
                     Intent giftImageActivity = new Intent(MainActivity.this,GiftImageActivity.class);
+
                     giftImageActivity.putExtra("videoUri",videoUri);
                     startActivity(giftImageActivity);
                 }

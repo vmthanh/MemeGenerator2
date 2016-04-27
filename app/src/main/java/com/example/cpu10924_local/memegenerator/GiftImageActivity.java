@@ -51,6 +51,7 @@ public class GiftImageActivity extends Activity {
     private ImageView deleteIcon;
     private EditText MemeEditText;
     private Button AddMemeStickerBtn;
+
     private Spinner FontSpinner;
     private static final int CHOOSE_IMAGE_REQUEST = 1;
     @Override
@@ -64,7 +65,17 @@ public class GiftImageActivity extends Activity {
         getDeleteButton();
         setAddCaptionText();
         getSticketButton();
+        getSaveImageButton();
+    }
 
+    private void getSaveImageButton() {
+        ImageView saveImageButton = (ImageView)findViewById(R.id.SaveImageButton);
+        saveImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                myGifView.saveGifVideo();
+            }
+        });
     }
 
     private void getFontSpinner()

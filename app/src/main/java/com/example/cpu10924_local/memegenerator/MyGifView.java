@@ -1,7 +1,10 @@
 package com.example.cpu10924_local.memegenerator;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Movie;
@@ -11,12 +14,20 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,7 +51,8 @@ public class MyGifView extends View {
     private Matrix imageViewMatrix;
     private Bitmap savedBitmap;
     private Canvas savedCanvas;
-
+    private boolean isStart;
+    private Uri videoUri;
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -83,7 +95,8 @@ public class MyGifView extends View {
        try {
            InputStream is = getContext().getContentResolver().openInputStream(videoUri);
            mMovie = Movie.decodeStream(is);
-            imageViewMatrix = new Matrix();
+           imageViewMatrix = new Matrix();
+           isStart = true;
 
        }catch (Exception e)
        {
@@ -94,6 +107,7 @@ public class MyGifView extends View {
     }
     public void setGiftVideo(Uri videoUri)
     {
+        this.videoUri = videoUri;
         init(videoUri);
         invalidate();
     }
@@ -106,48 +120,177 @@ public class MyGifView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        long now = android.os.SystemClock.uptimeMillis();
-        if (movieStart ==0)
+        if (isStart)
         {
-            movieStart = now;
-
-        }
-        if (mMovie!=null && savedCanvas !=null)
-        {
-            savedCanvas.save();
-            int relTime = (int)((now - movieStart)%mMovie.duration());
-            mMovie.setTime(relTime);
-            float scaleX = (float)gifViewWidth/(float)mMovie.width();
-           float scaleY = ((float)gifViewHeight/(float)mMovie.height());
-           savedCanvas.scale(scaleX,scaleY);
-            mMovie.draw(savedCanvas,0,0);
-            savedCanvas.restore();
-            Collections.sort(this.objectDrawList,ObjectDraw.drawOrderComparator);
-            for(int i=0; i<objectDrawList.size(); ++i)
+            long now = android.os.SystemClock.uptimeMillis();
+            if (movieStart ==0)
             {
-                if (objectDrawList.get(i)instanceof CaptionText)
-                {
-                    CaptionText captionText = (CaptionText)objectDrawList.get(i);
-                    savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.strokePaint);
-                    savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.paint);
-                }else{
-                    Sticker sticker = (Sticker)objectDrawList.get(i);
-                    savedCanvas.save();
-                    savedCanvas.setMatrix(sticker.matrix);
-                    savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmap.getWidth()/2,sticker.bitmap.getHeight()/2);
-                    sticker.drawable.draw(savedCanvas);
-                    savedCanvas.restore();
-                }
+                movieStart = now;
+
             }
-            canvas.drawBitmap(savedBitmap,imageViewMatrix,null);
-            invalidate();
+            if (mMovie!=null && savedCanvas !=null)
+            {
+                savedCanvas.save();
+                int relTime = (int)((now - movieStart)%mMovie.duration());
+                mMovie.setTime(relTime);
+                float scaleX = (float)gifViewWidth/(float)mMovie.width();
+                float scaleY = ((float)gifViewHeight/(float)mMovie.height());
+                savedCanvas.scale(scaleX,scaleY);
+                mMovie.draw(savedCanvas,0,0);
+                savedCanvas.restore();
+                Collections.sort(this.objectDrawList,ObjectDraw.drawOrderComparator);
+                for(int i=0; i<objectDrawList.size(); ++i)
+                {
+                    if (objectDrawList.get(i)instanceof CaptionText)
+                    {
+                        CaptionText captionText = (CaptionText)objectDrawList.get(i);
+                        savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.strokePaint);
+                        savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.paint);
+                    }else{
+                        Sticker sticker = (Sticker)objectDrawList.get(i);
+                        savedCanvas.save();
+                        savedCanvas.setMatrix(sticker.matrix);
+                        savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmap.getWidth()/2,sticker.bitmap.getHeight()/2);
+                        sticker.drawable.draw(savedCanvas);
+                        savedCanvas.restore();
+                    }
+                }
+                canvas.drawBitmap(savedBitmap,imageViewMatrix,null);
+                invalidate();
+            }
+
         }
 
     }
-    public Bitmap getResizedBitmap(Bitmap bmp, int newWidth, int newHeight)
-    {
-        return Bitmap.createScaledBitmap(bmp,newWidth,newHeight,false);
+
+    private class SaveGifAnimated extends AsyncTask<String,Integer, ByteArrayOutputStream> {
+        ProgressDialog progressDialog = new ProgressDialog(getContext());
+        private int numFrame;
+        private GifDecoder gifDecoder;
+        public SaveGifAnimated(int numFrame,GifDecoder gifDecoder)
+        {
+            this.numFrame = numFrame;
+            this.gifDecoder = gifDecoder;
+        }
+        @Override
+        protected ByteArrayOutputStream doInBackground(String... params) {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            AnimatedGifEncoder encoder = new AnimatedGifEncoder();
+            encoder.start(bos);
+            for(int k=0; k<this.numFrame;++k)
+            {
+                Log.v("Index frame:",String.valueOf(k));
+                savedCanvas.save();
+                float scaleX = (float)gifViewWidth/(float)mMovie.width();
+                float scaleY = ((float)gifViewHeight/(float)mMovie.height());
+                savedCanvas.scale(scaleX,scaleY);
+                savedCanvas.drawBitmap(this.gifDecoder.getFrame(k),0,0,null);
+                savedCanvas.restore();
+                Collections.sort(objectDrawList,ObjectDraw.drawOrderComparator);
+                for(int i=0; i<objectDrawList.size(); ++i)
+                {
+                    if (objectDrawList.get(i)instanceof CaptionText)
+                    {
+                        CaptionText captionText = (CaptionText)objectDrawList.get(i);
+                        savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.strokePaint);
+                        savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.paint);
+                    }else{
+                        Sticker sticker = (Sticker)objectDrawList.get(i);
+                        savedCanvas.save();
+                        savedCanvas.setMatrix(sticker.matrix);
+                        savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmap.getWidth()/2,sticker.bitmap.getHeight()/2);
+                        sticker.drawable.draw(savedCanvas);
+                        savedCanvas.restore();
+                    }
+                }
+                    /*ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    savedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                    Bitmap decoded = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));*/
+                Bitmap outBmp = Bitmap.createScaledBitmap(savedBitmap,mMovie.width(),mMovie.height(),false);
+                encoder.addFrame(outBmp);
+                encoder.setDelay(this.gifDecoder.getDelay(k));
+                publishProgress(1);
+            }
+            encoder.finish();
+            return bos;
+        }
+
+        @Override
+        protected void onPostExecute(ByteArrayOutputStream byteArrayOutputStream) {
+            super.onPostExecute(byteArrayOutputStream);
+            FileOutputStream outStream = null;
+            try{
+                //outStream = new FileOutputStream("/sdcard/test.gif");
+                String filePath = videoUri.toString();
+                File myFile = new File(filePath);
+                String displayName = null;
+
+                if (filePath.startsWith("content://")) {
+                    Cursor cursor = null;
+                    try {
+                        cursor = getContext().getContentResolver().query(videoUri, null, null, null, null);
+                        if (cursor != null && cursor.moveToFirst()) {
+                            displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                        }
+                    } finally {
+                        cursor.close();
+                    }
+                } else if (filePath.startsWith("file://")) {
+                    displayName = myFile.getName();
+                }
+
+                outStream = new FileOutputStream(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/meme_"+displayName);
+                outStream.write(byteArrayOutputStream.toByteArray());
+                outStream.close();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+            progressDialog.dismiss();
+            Toast.makeText(getContext(),"Save animated gif success",Toast.LENGTH_SHORT).show();
+            setWillNotDraw(false);
+        }
+
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            super.onProgressUpdate(values);
+            progressDialog.incrementProgressBy(values[0]);
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressDialog.setCancelable(false);
+            progressDialog.setTitle("Saving animated gif");
+            progressDialog.setMessage("Saving frame in progess");
+            progressDialog.setProgress(0);
+            progressDialog.setMax(numFrame);
+            progressDialog.show();
+            setWillNotDraw(true);
+        }
     }
+
+    public void saveGifVideo()
+    {
+
+        GifDecoder gifDecoder = new GifDecoder();
+        try {
+            InputStream inputStream = getContext().getContentResolver().openInputStream(this.videoUri);
+            gifDecoder.read(inputStream);
+            int numFrame = gifDecoder.getFrameCount();
+
+            if (numFrame !=0)
+            {
+                new SaveGifAnimated(numFrame,gifDecoder).execute();
+            }
+
+        }catch (Exception e)
+        {
+
+        }
+
+    }
+
     public void addTextCaption(CaptionText textCaption)
     {
         Rect bound = new Rect();
