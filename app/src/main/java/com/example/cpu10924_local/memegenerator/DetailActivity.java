@@ -71,8 +71,9 @@ public class DetailActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     Uri imageUri = data.getData();
                     try{
-                        int angle = checkImageOrientation(getRealFilePath(imageUri));
-                        new LoadImageToView(angle,LOAD_STICKER_VIEW).execute(getRealFilePath(imageUri));
+                        String realFilePath = getRealFilePath(imageUri);
+                        int angle = checkImageOrientation(realFilePath);
+                        new LoadImageToView(angle,LOAD_STICKER_VIEW).execute(realFilePath);
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -180,7 +181,6 @@ public class DetailActivity extends Activity {
             progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressDialog.setCancelable(false);
             progressDialog.setMessage("Loading image");
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressDialog.setProgress(0);
             progressDialog.setMax(100);
             progressDialog.show();

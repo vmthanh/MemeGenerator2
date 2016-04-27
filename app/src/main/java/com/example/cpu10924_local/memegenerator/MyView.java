@@ -38,7 +38,6 @@ public class MyView extends View {
     private int myViewHeight;
     private Bitmap saveBitmap;
     private Canvas savedCanvas;
-    private boolean isSetting = false;
 
     public interface MyViewCustomListener{
          void onCaptionTextClicked(CaptionText captionText);
@@ -53,23 +52,6 @@ public class MyView extends View {
         {
             savedCanvas.drawBitmap(bmpImage, 0,0, null);
 
-          /*  //Draw sticker
-            for(int i=0; i<stickerList.size();i++)
-            {
-                savedCanvas.save();
-                savedCanvas.setMatrix(stickerList.get(i).matrix);
-                savedCanvas.scale(stickerList.get(i).mScaleFactor,stickerList.get(i).mScaleFactor);
-                stickerList.get(i).drawable.draw(savedCanvas);
-                savedCanvas.restore();
-            }
-
-            //Draw text
-            for (int i = 0; i < captionTextList.size(); i++) {
-
-                savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).strokePaint);
-                savedCanvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x, captionTextList.get(i).y, captionTextList.get(i).paint);
-
-            }*/
             Collections.sort(this.objectDrawList, ObjectDraw.drawOrderComparator);
             for(int i=0; i<objectDrawList.size();++i)
             {
@@ -90,10 +72,8 @@ public class MyView extends View {
             }
             canvas.drawBitmap(saveBitmap,imageViewMatrix,null);
         }
-
-
-
     }
+
     public void setOnTouchCustomView(MyViewCustomListener listener)
     {
         this.listener = listener;
@@ -253,8 +233,6 @@ public class MyView extends View {
 
     public void rotateImage(int angle)
     {
-
-
         matrix = new Matrix();
         matrix.postRotate(angle);
         bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
@@ -281,7 +259,6 @@ public class MyView extends View {
     }
     public void setSticker(Sticker sticker)
     {
-        stickerList.add(sticker);
         objectDrawList.add(sticker);
         invalidate();
     }

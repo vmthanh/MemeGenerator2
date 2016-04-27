@@ -1,7 +1,9 @@
 package com.example.cpu10924_local.memegenerator;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -11,13 +13,19 @@ import android.graphics.PointF;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -25,6 +33,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 
 import java.io.InputStream;
@@ -39,8 +48,10 @@ import yuku.ambilwarna.AmbilWarnaDialog;
 public class GiftImageActivity extends Activity {
     private MyGifView myGifView;
     private LinearLayout TextSetting;
+    private ImageView deleteIcon;
     private EditText MemeEditText;
     private Button AddMemeStickerBtn;
+    private Spinner FontSpinner;
     private static final int CHOOSE_IMAGE_REQUEST = 1;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,20 +59,33 @@ public class GiftImageActivity extends Activity {
         setContentView(R.layout.custom_gif_view);
         Uri videoUri = getIntent().getParcelableExtra("videoUri");
         setGifView(videoUri);
-        FontSpinner = (Spinner)findViewById(R.id.FontSpinner);
-        List<String> list = new ArrayList<String>();
-        String[] fontSizeArray = getResources().getStringArray(R.array.font_size_array);
-        for (String s:
-                fontSizeArray) {
-            list.add(s);
-        }
-        ArrayAdapter<String> fontSizeAdapter = new ArrayAdapter<String>(getBaseContext(),android.R.layout.simple_spinner_item,list);
-        fontSizeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        FontSpinner.setAdapter(fontSizeAdapter);
+        getFontSpinner();
         TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
+        getDeleteButton();
         setAddCaptionText();
         getSticketButton();
 
+    }
+
+    private void getFontSpinner()
+    {
+        FontSpinner = (Spinner)findViewById(R.id.FontSpinner);
+        ArrayAdapter fontSizeAdapter = ArrayAdapter.createFromResource(GiftImageActivity.this,R.array.font_size_array,R.layout.my_spinner_item);
+        fontSizeAdapter.setDropDownViewResource(R.layout.my_simple_spinner_dropdown_item);
+        FontSpinner.setAdapter(fontSizeAdapter);
+    }
+
+    private void getDeleteButton() {
+        deleteIcon = (ImageView)findViewById(R.id.deleteIcon);
+        deleteIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                myGifView.DeleteObject();
+                myGifView.invalidate();
+                deleteIcon.setVisibility(View.INVISIBLE);
+                TextSetting.setVisibility(View.INVISIBLE);
+            }
+        });
     }
 
     @Override
@@ -72,16 +96,12 @@ public class GiftImageActivity extends Activity {
                 if (resultCode == RESULT_OK) {
                     Uri imageUri = data.getData();
                     try{
-                        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-                        bmOptions.inJustDecodeBounds = true;
-                        Bitmap bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
-                        bmOptions.inSampleSize = calculateInSampleSize(bmOptions,250,250);
-                        bmOptions.inJustDecodeBounds = false;
-                        InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                        bmpSticker = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri),null,bmOptions);
-                        addMemeSticker(bmpSticker);
-                    }catch (Exception e){
+                        String realFilePath = getRealFilePath(imageUri);
+                        int angle = checkImageOrientation(realFilePath);
+                        new LoadImageToView(angle).execute(realFilePath);
 
+                    }catch (Exception e){
+                        e.printStackTrace();
                     }
                 }
                 break;
@@ -89,10 +109,90 @@ public class GiftImageActivity extends Activity {
                 break;
         }
     }
-    private void addMemeSticker(Bitmap bitmapSticker)
+
+    private String getRealFilePath(Uri imageUri) {
+        Cursor cursor = getContentResolver().query(imageUri,null,null,null,null);
+        cursor.moveToFirst();
+        int idx = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+        return cursor.getString(idx);
+    }
+
+    private int checkImageOrientation(String path)
+    {
+        try{
+            ExifInterface exifInterface = new ExifInterface(path);
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+            int angle;
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    angle = 90;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    angle = 180;
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    angle = 270;
+                    break;
+                default:
+                    angle = 0;
+                    break;
+            }
+            return angle;
+        }catch (Exception e)
+        {
+            return -1;
+        }
+    }
+    private class LoadImageToView extends AsyncTask<String,Void,Bitmap>{
+        ProgressDialog progressDialog = new ProgressDialog(GiftImageActivity.this);
+        private int angle;
+        public LoadImageToView(int angle)
+        {
+            this.angle = angle;
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            addMemeSticker(bitmap,angle);
+            progressDialog.dismiss();
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... params) {
+            Bitmap loadBitmap;
+            BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+            bmOptions.inJustDecodeBounds = true;
+            loadBitmap = BitmapFactory.decodeFile(params[0],bmOptions);
+            int newWidth = 300;
+            int newHeight = newWidth*bmOptions.outHeight/bmOptions.outWidth;
+            bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
+            bmOptions.inJustDecodeBounds = false;
+            loadBitmap = BitmapFactory.decodeFile(params[0],bmOptions);
+            return loadBitmap;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setCancelable(false);
+            progressDialog.setMessage("Loading image");
+            progressDialog.setProgress(0);
+            progressDialog.setMax(100);
+            progressDialog.show();
+        }
+    }
+    private void addMemeSticker(Bitmap bitmapSticker,int angle)
     {
         Matrix matrix = new Matrix();
-        Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);;
+        matrix.postRotate(angle);
+        bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrix,false);
+        matrix.setTranslate(100,100);
+
+        Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);
+        drawable.setBounds(0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight());
+
         Sticker newSticker = new Sticker(bitmapSticker,100,100,matrix,drawable);
         myGifView.setSticker(newSticker);
     }
@@ -119,80 +219,40 @@ public class GiftImageActivity extends Activity {
     }
 
     CaptionText captionTextClicked;
-    Sticker stickerClicked;
-    private float mScaleFactor = 1.f;
-    static final int NONE = 100;
-    static final int DRAG = 200;
-    static final int ZOOM = 300;
-    int mode = NONE;
-    float oldDist = 1f;
-    PointF mid = new PointF();
+
     private void setGifView(Uri videoUri)
     {
         myGifView = (MyGifView)findViewById(R.id.mygifview);
         myGifView.setGiftVideo(videoUri);
-        myGifView.setOnTouchListener(new View.OnTouchListener() {
+        myGifView.setOnTouchCustomGifView(new MyGifView.MyGiftViewCustomListener() {
             @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        captionTextClicked = myGifView.getInitTextLocation(event.getRawX(), event.getRawY());
-                        if (captionTextClicked == null) {
-                            TextSetting.setVisibility(View.GONE);
-                            stickerClicked = myGifView.getInitStickerLocation(event.getRawX(), event.getRawY());
-                            if (stickerClicked != null) {
-
-                            }
-                        } else {
-                            TextSetting.setVisibility(View.VISIBLE);
-                            getEditText();
-                            addItemOnSpiner();
-                            getColorSpinner();
-                        }
-                        mode = DRAG;
-                        break;
-                    case MotionEvent.ACTION_UP: //first finger lifted
-                    case MotionEvent.ACTION_POINTER_UP: //second finger lifted
-                        mode = NONE;
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        oldDist = spacing(event);
-                        if (oldDist > 1f) {
-                            midPoint(mid, event);
-                            mode = ZOOM;
-                        }
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        if (mode == DRAG) {
-                            if (captionTextClicked != null) {
-                                float x = event.getRawX();
-                                float y = event.getRawY();
-                                myGifView.moveObject(x, y);
-                            } else if (stickerClicked != null) {
-                                float x = event.getRawX();
-                                float y = event.getRawY();
-                                myGifView.moveObject(x, y);
-                            }
-
-                        } else if (mode == ZOOM) {
-                            float newDist = spacing(event);
-                            if (newDist > 1f) {
-                                mScaleFactor = newDist / oldDist;
-                                mScaleFactor = Math.max(0.5f, Math.min(mScaleFactor, 3.0f));
-                                Log.v("Scale:", String.valueOf(mScaleFactor));
-                                myGifView.scaleSticker(mScaleFactor, mid.x, mid.y);
-                            }
-                        }
-                        break;
-                    default:
-                        break;
+            public void onCaptionTextClicked(CaptionText captionText) {
+                captionTextClicked = captionText;
+                if (captionTextClicked ==null)
+                {
+                    TextSetting.setVisibility(View.INVISIBLE);
+                }else{
+                    deleteIcon.setVisibility(View.VISIBLE);
+                    TextSetting.setVisibility(View.VISIBLE);
+                    getEditText();
+                    addItemOnSpiner();
+                    getColorSpinner();
                 }
+            }
 
-                return true;
+            @Override
+            public void onStickerTextClicked(Sticker sticker) {
+                if (sticker!=null)
+                {
+                    deleteIcon.setVisibility(View.VISIBLE);
+                }else{
+                    deleteIcon.setVisibility(View.INVISIBLE);
+                }
             }
         });
+
     }
-    private Spinner FontSpinner;
+
     private void addItemOnSpiner()
     {
         switch ((int)captionTextClicked.paint.getTextSize())
@@ -276,6 +336,20 @@ public class GiftImageActivity extends Activity {
     private void getEditText()
     {
         MemeEditText = (EditText)findViewById(R.id.MemeEditText);
+        MemeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId== EditorInfo.IME_ACTION_DONE)
+                {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if(imm.isAcceptingText()) { // verify if the soft keyboard is open
+                        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
         MemeEditText.setText(captionTextClicked.content);
         MemeEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -295,17 +369,7 @@ public class GiftImageActivity extends Activity {
             }
         });
     }
-    private float spacing(MotionEvent event) {
-        float x = event.getX(0) - event.getX(1);
-        float y = event.getY(0) - event.getY(1);
-        double res= (double)(x*x) + (double)(y*y);
-        return (float)Math.sqrt(res);
-    }
-    private void midPoint(PointF point, MotionEvent event) {
-        float x = event.getX(0) + event.getX(1);
-        float y = event.getY(0) + event.getY(1);
-        point.set(x / 2, y / 2);
-    }
+
     private void setAddCaptionText()
     {
         Button captionTextButton = (Button)findViewById(R.id.AddCaptionBtn);

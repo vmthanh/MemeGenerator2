@@ -13,11 +13,13 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.io.File;
 
@@ -28,21 +30,52 @@ public class MyGifView extends View {
    public Movie mMovie;
     public long movieStart;
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
-    public List<Sticker> stickerList = new ArrayList<Sticker>();
-    private List<Bitmap> listFrame = new ArrayList<>();
-    private int indexClickText = -1;
-    private int indexClickSticker = -1;
+    public List<ObjectDraw> objectDrawList = new ArrayList<>();
     private float initX;
     private float initY;
+    private int myViewWidth;
+    private int myViewHeight;
+    private int gifViewWidth;
+    private int gifViewHeight;
+    private Matrix imageViewMatrix;
+    private Bitmap savedBitmap;
+    private Canvas savedCanvas;
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        myViewHeight = MeasureSpec.getSize(heightMeasureSpec);
+        myViewWidth = MeasureSpec.getSize(widthMeasureSpec);
+        if (mMovie!=null)
+        {
+            gifViewWidth = myViewWidth;
+            gifViewHeight = (gifViewWidth*mMovie.height())/mMovie.width();
+            imageViewMatrix.reset();
+            imageViewMatrix.setTranslate(0,0);
+            savedBitmap  = Bitmap.createBitmap(gifViewWidth,gifViewHeight,Bitmap.Config.RGB_565);
+            if (savedCanvas == null)
+            {
+                savedCanvas = new Canvas(savedBitmap);
+            }else{
+                savedCanvas.setBitmap(savedBitmap);
+            }
+
+        }
+    }
+
+    public interface MyGiftViewCustomListener{
+        void onCaptionTextClicked(CaptionText captionText);
+        void onStickerTextClicked(Sticker sticker);
+
+    }
+    private MyGiftViewCustomListener  listener;
     public MyGifView(Context context)
     {
         super(context);
-        //init();
     }
     public MyGifView(Context context,AttributeSet attrs)
     {
         super(context, attrs);
-        //init();
     }
     private void init(Uri videoUri)
     {
@@ -50,6 +83,7 @@ public class MyGifView extends View {
        try {
            InputStream is = getContext().getContentResolver().openInputStream(videoUri);
            mMovie = Movie.decodeStream(is);
+            imageViewMatrix = new Matrix();
 
        }catch (Exception e)
        {
@@ -61,49 +95,57 @@ public class MyGifView extends View {
     public void setGiftVideo(Uri videoUri)
     {
         init(videoUri);
+        invalidate();
+    }
+
+    public void setOnTouchCustomGifView(MyGiftViewCustomListener listener)
+    {
+        this.listener = listener;
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
         long now = android.os.SystemClock.uptimeMillis();
         if (movieStart ==0)
         {
             movieStart = now;
 
         }
-        if (mMovie!=null)
+        if (mMovie!=null && savedCanvas !=null)
         {
-            canvas.save();
+            savedCanvas.save();
             int relTime = (int)((now - movieStart)%mMovie.duration());
             mMovie.setTime(relTime);
-            float scaleX = (float)getWidth()/(float)mMovie.width();
-            float scaleY = (float)getHeight()/(float)mMovie.height();
-            canvas.scale(scaleX,scaleY);
-            mMovie.draw(canvas, 0, 0);
-            canvas.restore();
-
-            for(int i=0;i<captionTextList.size();++i)
+            float scaleX = (float)gifViewWidth/(float)mMovie.width();
+           float scaleY = ((float)gifViewHeight/(float)mMovie.height());
+           savedCanvas.scale(scaleX,scaleY);
+            mMovie.draw(savedCanvas,0,0);
+            savedCanvas.restore();
+            Collections.sort(this.objectDrawList,ObjectDraw.drawOrderComparator);
+            for(int i=0; i<objectDrawList.size(); ++i)
             {
-                canvas.drawText(captionTextList.get(i).content.toUpperCase(),captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).strokePaint);
-                canvas.drawText(captionTextList.get(i).content.toUpperCase(), captionTextList.get(i).x , captionTextList.get(i).y, captionTextList.get(i).paint);
+                if (objectDrawList.get(i)instanceof CaptionText)
+                {
+                    CaptionText captionText = (CaptionText)objectDrawList.get(i);
+                    savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.strokePaint);
+                    savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.paint);
+                }else{
+                    Sticker sticker = (Sticker)objectDrawList.get(i);
+                    savedCanvas.save();
+                    savedCanvas.setMatrix(sticker.matrix);
+                    savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmap.getWidth()/2,sticker.bitmap.getHeight()/2);
+                    sticker.drawable.draw(savedCanvas);
+                    savedCanvas.restore();
+                }
             }
-
-            for(int i=0; i<stickerList.size();++i)
-            {
-                canvas.save();
-                canvas.setMatrix(stickerList.get(i).matrix);
-                stickerList.get(i).drawable.draw(canvas);
-                canvas.restore();
-            }
+            canvas.drawBitmap(savedBitmap,imageViewMatrix,null);
             invalidate();
         }
 
     }
     public Bitmap getResizedBitmap(Bitmap bmp, int newWidth, int newHeight)
     {
-
         return Bitmap.createScaledBitmap(bmp,newWidth,newHeight,false);
     }
     public void addTextCaption(CaptionText textCaption)
@@ -116,11 +158,11 @@ public class MyGifView extends View {
         {
             //Move text to bottom
             case 1:
-                textCaption.y = getHeight();
+                textCaption.y = gifViewHeight;
                 break;
             //Move text to middle
             case 2:
-                textCaption.y = getHeight()/2 - bound.height()/2;
+                textCaption.y = gifViewHeight/2 - bound.height()/2;
                 break;
             //Otherwise, move up
             default:
@@ -128,114 +170,210 @@ public class MyGifView extends View {
 
         }
         captionTextList.add(textCaption);
+        objectDrawList.add(textCaption);
         invalidate();
     }
+    private CaptionText captionTextClicked = null;
+    private Sticker stickerClicked = null;
+    private float mScaleFactor = 1f;
+    static final int NONE = 100;
+    static final int DRAG = 200;
+    static final int ZOOM = 300;
+    int mode = NONE;
+    float oldDist = 1f;
+    float newDist = 1f;
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        super.onTouchEvent(event);
+        switch (event.getAction()&MotionEvent.ACTION_MASK){
+            case MotionEvent.ACTION_DOWN:
+                if (listener!=null)
+                {
+                    captionTextClicked = getInitTextLocation(event.getX(),event.getY());
+                    stickerClicked = getInitStickerLocation(event.getX(),event.getY());
+                    if (captionTextClicked!=null && stickerClicked !=null)
+                    {
+                        if (captionTextClicked.drawOrder > stickerClicked.drawOrder)
+                        {
+                            stickerClicked = null;
+                        }else{
+                            captionTextClicked = null;
+                        }
+                    }
+                    if (captionTextClicked == null)
+                    {
+                        listener.onCaptionTextClicked(null);
+                        if (stickerClicked!=null)
+                        {
+                            listener.onStickerTextClicked(stickerClicked);
+                            stickerClicked.sendToFront(objectDrawList);
+                        }else{
+                            listener.onStickerTextClicked(null);
+                        }
+                    }else{
+                        listener.onCaptionTextClicked(captionTextClicked);
+                        captionTextClicked.sendToFront(objectDrawList);
+                    }
+                }
+                mode = DRAG;
+                break;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_POINTER_UP:
+                mode = NONE;
+                oldDist = newDist = 1f;
+                if (stickerClicked !=null)
+                {
+                    stickerClicked.mStoreScaleFactor = stickerClicked.mScaleFactor;
+                }
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                oldDist = spacing(event);
+                if (oldDist >5f)
+                {
+                    mode = ZOOM;
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (mode ==DRAG)
+                {
+                    float x = event.getX();
+                    float y = event.getY();
+                    moveObject(x,y);
+
+                }else if (mode ==ZOOM)
+                {
+                    if (spacing(event)!=newDist)
+                    {
+                        newDist = spacing(event);
+                        if ((Math.abs(newDist - oldDist)) >10f){
+                            mScaleFactor = (newDist/oldDist);
+                            scaleSticker(mScaleFactor);
+                        }
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+        invalidate();
+        return true;
+    }
+
+    private float spacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        double res= (double)(x*x) + (double)(y*y);
+        return (float)Math.sqrt(res);
+    }
+    public void DeleteObject()
+    {
+        if (stickerClicked!=null)
+        {
+            objectDrawList.remove(stickerClicked);
+        }
+        if (captionTextClicked!=null)
+        {
+            objectDrawList.remove(captionTextClicked);
+        }
+    }
+
 
     public CaptionText getInitTextLocation(float locX,float locY)
     {
-        for(int i=0;i<captionTextList.size();i++)
+        for(int i=objectDrawList.size()-1;i>=0;i--)
         {
-
-            Rect bound = new Rect();
-            captionTextList.get(i).paint.getTextBounds(captionTextList.get(i).content,0,captionTextList.get(i).content.length(),bound);
-            float padding = 20;
-            float left = captionTextList.get(i).x - padding;
-            float top = captionTextList.get(i).y -padding;
-            float right = captionTextList.get(i).x + bound.width() +padding;
-            float bottom = captionTextList.get(i).y + bound.height() +padding;
-
-            if (top <= locY && locY <=bottom)
+            if (objectDrawList.get(i) instanceof CaptionText)
             {
-                if(left <=locX && locX <=right)
+                CaptionText captionText = (CaptionText)objectDrawList.get(i);
+                Rect bound = new Rect();
+                captionText.paint.getTextBounds(captionText.content,0,captionText.content.length(),bound);
+                float padding = 50;
+                float left = captionText.x -padding;
+                float top = captionText.y- bound.height()-padding;
+                float right = captionText.x + bound.width() +2*padding;
+                float bottom = captionText.y  ;
+
+                if (top <= locY && locY <=bottom)
                 {
-                    initX = locX;
-                    initY = locY;
-                    indexClickText = i;
-                    return captionTextList.get(i);
+                    if(left <=locX && locX <=right)
+                    {
+                        initX = locX;
+                        initY = locY;
+                        return (CaptionText)objectDrawList.get(i);
+                    }
                 }
             }
-
         }
-        indexClickText = -1;
         return null;
-
     }
     public Sticker getInitStickerLocation(float locX, float locY)
     {
-        for(int i=0; i<stickerList.size();++i)
+        for(int i=objectDrawList.size()-1; i>=0;i--)
         {
-            Bitmap img = stickerList.get(i).bitmap;
-            float padding = 50;
-            float left = stickerList.get(i).x - padding;
-            float right = stickerList.get(i).x + img.getWidth() + padding;
-            float top = stickerList.get(i).y - padding;
-            float bottom = stickerList.get(i).y + img.getHeight() + padding;
-            if (top <= locY && locY <= bottom)
+            if (objectDrawList.get(i) instanceof Sticker)
             {
-                if (left  <= locX && locX <= right)
+                Sticker sticker = (Sticker) objectDrawList.get(i);
+                Bitmap img = sticker.bitmap;
+                float padding = 80;
+                float left = sticker.x-padding;
+                float right = sticker.x + sticker.canvasWidth +padding;
+                float top = sticker.y - padding;
+                float bottom = sticker.y + sticker.canvasHeight +padding;
+                if (top <= locY && locY <= bottom)
                 {
-                    initX = locX;
-                    initY = locY;
-                    indexClickSticker =  i;
-                    return stickerList.get(i);
+                    if (left  <= locX && locX <= right)
+                    {
+                        initX = locX;
+                        initY = locY;
+                        return (Sticker) objectDrawList.get(i);
+                    }
                 }
             }
+
         }
-        indexClickSticker = -1;
+
         return  null;
     }
     public void setSticker(Sticker sticker)
     {
-        sticker.bitmap = getResizedBitmap(sticker.bitmap,300,300);
-        sticker.matrix.setTranslate(sticker.x, sticker.y);
-        sticker.drawable.setBounds(0, 0, sticker.bitmap.getWidth(), sticker.bitmap.getHeight());
-        stickerList.add(sticker);
+        objectDrawList.add(sticker);
+        invalidate();
     }
-    public void scaleSticker(float mScaleFactor,float mFocusX, float mFocusY)
+    public void scaleSticker(float mScaleFactor)
     {
 
-        if (indexClickSticker != -1)
+        if (stickerClicked != null)
         {
-            Sticker updateSticker= stickerList.get(indexClickSticker);
-            float newWidth = updateSticker.bitmap.getWidth()*mScaleFactor;
-            float newHeigt = updateSticker.bitmap.getHeight()*mScaleFactor;
-            if(newWidth >200 && newHeigt >200)
-            {
-                if (newWidth <1200 && newHeigt <1200) {
-                    updateSticker.matrix.postScale(mScaleFactor, mScaleFactor, updateSticker.x, updateSticker.y);
-                    updateSticker.bitmap = getResizedBitmap(updateSticker.bitmap, (int) newWidth, (int) newHeigt);
-                }
-            }
-            stickerList.set(indexClickSticker,updateSticker);
+            stickerClicked.mScaleFactor = mScaleFactor;
+            if (stickerClicked.mStoreScaleFactor != 1f)
+                stickerClicked.mScaleFactor *=stickerClicked.mStoreScaleFactor;
+            stickerClicked.mScaleFactor = Math.max(0.3f, Math.min(stickerClicked.mScaleFactor, 3.0f));
+            stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmap.getHeight();
+            stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmap.getWidth();
+
         }
     }
     public void moveObject(float newX, float newY)
     {
-        if (indexClickText !=-1)
+        if (captionTextClicked !=null)
         {
-
-            CaptionText updateCaptionText = captionTextList.get(indexClickText);
             float deltaX = newX - initX;
             float deltaY = newY - initY;
-            updateCaptionText.x +=deltaX;
-            updateCaptionText.y +=deltaY;
+            captionTextClicked.x +=deltaX;
+            captionTextClicked.y +=deltaY;
             initX = newX;
             initY = newY;
-            captionTextList.set(indexClickText, updateCaptionText);
-
         }
-        if (indexClickSticker !=-1)
+        if (stickerClicked !=null)
         {
-            Sticker updateSticker = stickerList.get(indexClickSticker);
             float deltaX = newX - initX;
             float deltaY = newY - initY;
-
-            updateSticker.x +=deltaX;
-            updateSticker.y +=deltaY;
-            updateSticker.matrix.postTranslate(deltaX,deltaY);
+            stickerClicked.x +=deltaX;
+            stickerClicked.y +=deltaY;
+            stickerClicked.matrix.postTranslate(deltaX,deltaY);
             initX = newX;
             initY = newY;
-            stickerList.set(indexClickSticker, updateSticker);
         }
 
     }
