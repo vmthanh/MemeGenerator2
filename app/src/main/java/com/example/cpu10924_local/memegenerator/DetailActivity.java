@@ -63,6 +63,9 @@ public class DetailActivity extends Activity {
     private static final int LOAD_STICKER_VIEW = 3;
     private LinearLayout TextSetting;
     private ImageView deleteIcon;
+    static {
+        System.loadLibrary("native");
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
