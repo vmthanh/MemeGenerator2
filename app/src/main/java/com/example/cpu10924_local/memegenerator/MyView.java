@@ -205,6 +205,8 @@ public class MyView extends View {
     public void freeMemCanvas()
     {
         bitmapHolder.freeBitmap();
+        bmpImage.recycle();
+        saveBitmap.recycle();
        // bitmapHolderSavedBitmap.freeBitmap();
 
     }
