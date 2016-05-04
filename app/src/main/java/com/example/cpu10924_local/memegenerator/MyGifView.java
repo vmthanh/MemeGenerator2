@@ -45,7 +45,7 @@ public class MyGifView extends View {
     private float initX;
     private float initY;
     private int myViewWidth;
-    private int myViewHeight;
+    //private int myViewHeight;
     private int gifViewWidth;
     private int gifViewHeight;
     private Matrix imageViewMatrix;
@@ -53,10 +53,11 @@ public class MyGifView extends View {
     private Canvas savedCanvas;
     private boolean isStart;
     private Uri videoUri;
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        myViewHeight = MeasureSpec.getSize(heightMeasureSpec);
+      //  myViewHeight = MeasureSpec.getSize(heightMeasureSpec);
         myViewWidth = MeasureSpec.getSize(widthMeasureSpec);
         if (mMovie!=null)
         {
@@ -150,7 +151,7 @@ public class MyGifView extends View {
                         Sticker sticker = (Sticker)objectDrawList.get(i);
                         savedCanvas.save();
                         savedCanvas.setMatrix(sticker.matrix);
-                        savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmap.getWidth()/2,sticker.bitmap.getHeight()/2);
+                        savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmapWidth/2,sticker.bitmapHeigh/2);
                         sticker.drawable.draw(savedCanvas);
                         savedCanvas.restore();
                     }
@@ -198,7 +199,7 @@ public class MyGifView extends View {
                         Sticker sticker = (Sticker)objectDrawList.get(i);
                         savedCanvas.save();
                         savedCanvas.setMatrix(sticker.matrix);
-                        savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmap.getWidth()/2,sticker.bitmap.getHeight()/2);
+                        savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmapWidth/2,sticker.bitmapHeigh/2);
                         sticker.drawable.draw(savedCanvas);
                         savedCanvas.restore();
                     }
@@ -246,7 +247,7 @@ public class MyGifView extends View {
                 e.printStackTrace();
             }
             progressDialog.dismiss();
-            Toast.makeText(getContext(),"Save animated gif success",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(),"Save animated gif success in folder Pictures",Toast.LENGTH_SHORT).show();
             setWillNotDraw(false);
         }
 
@@ -259,6 +260,7 @@ public class MyGifView extends View {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            setWillNotDraw(true);
             progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             progressDialog.setCancelable(false);
             progressDialog.setTitle("Saving animated gif");
@@ -266,7 +268,6 @@ public class MyGifView extends View {
             progressDialog.setProgress(0);
             progressDialog.setMax(numFrame);
             progressDialog.show();
-            setWillNotDraw(true);
         }
     }
 
@@ -457,7 +458,6 @@ public class MyGifView extends View {
             if (objectDrawList.get(i) instanceof Sticker)
             {
                 Sticker sticker = (Sticker) objectDrawList.get(i);
-                Bitmap img = sticker.bitmap;
                 float padding = 80;
                 float left = sticker.x-padding;
                 float right = sticker.x + sticker.canvasWidth +padding;
@@ -492,8 +492,8 @@ public class MyGifView extends View {
             if (stickerClicked.mStoreScaleFactor != 1f)
                 stickerClicked.mScaleFactor *=stickerClicked.mStoreScaleFactor;
             stickerClicked.mScaleFactor = Math.max(0.3f, Math.min(stickerClicked.mScaleFactor, 3.0f));
-            stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmap.getHeight();
-            stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmap.getWidth();
+            stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmapHeigh;
+            stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmapWidth;
 
         }
     }

@@ -28,7 +28,6 @@ public class MyView extends View {
     private Matrix matrix;
     private Matrix imageViewMatrix;
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
-    public List<Sticker> stickerList = new ArrayList<Sticker>();
     public List<ObjectDraw> objectDrawList = new ArrayList<>();
     private float initX;
     private float initY;
@@ -38,6 +37,8 @@ public class MyView extends View {
     private int myViewHeight;
     private Bitmap saveBitmap;
     private Canvas savedCanvas;
+    private final JniBitmapHolder bitmapHolder = new JniBitmapHolder();
+   // private final JniBitmapHolder bitmapHolderSavedBitmap = new JniBitmapHolder();
 
     public interface MyViewCustomListener{
          void onCaptionTextClicked(CaptionText captionText);
@@ -65,7 +66,7 @@ public class MyView extends View {
                     Sticker sticker = (Sticker)objectDrawList.get(i);
                     savedCanvas.save();
                     savedCanvas.setMatrix(sticker.matrix);
-                    savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmap.getWidth()/2, sticker.bitmap.getHeight()/2);
+                    savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmapWidth/2, sticker.bitmapHeigh/2);
                     sticker.drawable.draw(savedCanvas);
                     savedCanvas.restore();
                 }
@@ -199,26 +200,39 @@ public class MyView extends View {
         imageViewMatrix = new Matrix();
         imageViewMatrix.setTranslate(0,0);
 
+
     }
+    public void freeMemCanvas()
+    {
+        bitmapHolder.freeBitmap();
+       // bitmapHolderSavedBitmap.freeBitmap();
+
+    }
+
     public void setCanvasBitmap(Bitmap bitmap)
     {
-
-        bmpImage = bitmap;
-        if (bmpImage.getHeight() > bmpImage.getWidth())
+        int bitmapWidth = bitmap.getWidth();
+        int bitmapHeight = bitmap.getHeight();
+        bitmapHolder.storeBitmap(bitmap);
+        bitmap.recycle();
+        //bmpImage = bitmap;
+        if (bitmapHeight > bitmapWidth)
         {
             imageViewHeight = myViewHeight;
-            imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
+            imageViewWidth = (imageViewHeight*bitmapWidth)/bitmapHeight;
             int locX = myViewWidth /2-imageViewWidth/2;
             int locY = 0;
             imageViewMatrix.reset();
             imageViewMatrix.setTranslate(locX,locY);
         }else{
             imageViewWidth = myViewWidth;
-            imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+            imageViewHeight = (imageViewWidth*bitmapHeight)/bitmapWidth;
             imageViewMatrix.reset();
             imageViewMatrix.setTranslate(0,0);
         }
-        bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
+        bitmapHolder.scaleBitmap(imageViewWidth,imageViewHeight, JniBitmapHolder.ScaleMethod.NearestNeighbour);
+       // bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
+        bmpImage = bitmapHolder.getBitmap();
         if (saveBitmap==null)
         {
             saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
@@ -233,14 +247,16 @@ public class MyView extends View {
 
     public void rotateImage(int angle)
     {
-        matrix = new Matrix();
-        matrix.postRotate(angle);
-        bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
+        bmpImage.recycle();
+        bitmapHolder.rotateBitmapCw90();
+        //matrix = new Matrix();
+        //matrix.postRotate(angle);
+        //bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
 
        if (imageViewWidth > imageViewHeight)
         {
             imageViewHeight = myViewHeight;
-            imageViewWidth = (imageViewHeight*bmpImage.getWidth())/bmpImage.getHeight();
+            imageViewWidth = (imageViewHeight*bitmapHolder.getBitmap().getWidth())/bitmapHolder.getBitmap().getHeight();
             int locX = myViewWidth /2-imageViewWidth/2;
             int locY = 0;
             imageViewMatrix.reset();
@@ -249,12 +265,18 @@ public class MyView extends View {
         }
         else if (imageViewWidth <imageViewHeight){
             imageViewWidth = myViewWidth;
-            imageViewHeight = (imageViewWidth*bmpImage.getHeight())/bmpImage.getWidth();
+            imageViewHeight = (imageViewWidth*bitmapHolder.getBitmap().getHeight())/bitmapHolder.getBitmap().getWidth();
             imageViewMatrix.reset();
             imageViewMatrix.setTranslate(0,0);
         }
-        bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
-        saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
+        bitmapHolder.scaleBitmap(imageViewWidth,imageViewHeight, JniBitmapHolder.ScaleMethod.NearestNeighbour);
+       // bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
+        bmpImage = bitmapHolder.getBitmap();
+
+       // saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
+        saveBitmap = getResizedBitmap(saveBitmap,imageViewWidth,imageViewHeight);
+       // bitmapHolderSavedBitmap.scaleBitmap(imageViewWidth,imageViewHeight, JniBitmapHolder.ScaleMethod.NearestNeighbour);
+       // saveBitmap = bitmapHolderSavedBitmap.getBitmap();
         savedCanvas = new Canvas(saveBitmap);
     }
     public void setSticker(Sticker sticker)
@@ -343,7 +365,7 @@ public class MyView extends View {
             if (objectDrawList.get(i) instanceof Sticker)
             {
                 Sticker sticker = (Sticker) objectDrawList.get(i);
-                Bitmap img = sticker.bitmap;
+
                 float padding = 80;
                 float left = sticker.x-padding;
                 float right = sticker.x + sticker.canvasWidth +padding;
@@ -398,8 +420,8 @@ public class MyView extends View {
                 if (stickerClicked.mStoreScaleFactor != 1f)
                       stickerClicked.mScaleFactor *=stickerClicked.mStoreScaleFactor;
                 stickerClicked.mScaleFactor = Math.max(0.3f, Math.min(stickerClicked.mScaleFactor, 3.0f));
-                stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmap.getHeight();
-                stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmap.getWidth();
+                stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmapHeigh;
+                stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmapWidth;
 
         }
     }

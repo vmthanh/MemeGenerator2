@@ -204,7 +204,7 @@ public class GiftImageActivity extends Activity {
         Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);
         drawable.setBounds(0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight());
 
-        Sticker newSticker = new Sticker(bitmapSticker,100,100,matrix,drawable);
+        Sticker newSticker = new Sticker(100,100,matrix,drawable,bitmapSticker.getWidth(),bitmapSticker.getHeight());
         myGifView.setSticker(newSticker);
     }
     private int calculateInSampleSize(BitmapFactory.Options options,int Width, int Height)

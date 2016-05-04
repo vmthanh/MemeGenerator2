@@ -63,9 +63,7 @@ public class DetailActivity extends Activity {
     private static final int LOAD_STICKER_VIEW = 3;
     private LinearLayout TextSetting;
     private ImageView deleteIcon;
-    static {
-        System.loadLibrary("native");
-    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -134,8 +132,7 @@ public class DetailActivity extends Activity {
 
         Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);
         drawable.setBounds(0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight());
-
-        Sticker newSticker = new Sticker(bitmapSticker,100,100,matrixSticker,drawable);
+        Sticker newSticker = new Sticker(100,100,matrixSticker,drawable, bitmapSticker.getWidth(),bitmapSticker.getHeight());
 
         MemeImageView.setSticker(newSticker);
     }
@@ -258,6 +255,7 @@ public class DetailActivity extends Activity {
         });
 
     }
+
 
 
     private void getAddCaptionBtn() {
@@ -431,6 +429,12 @@ public class DetailActivity extends Activity {
             }
         });
 
+    }
+
+    @Override
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        MemeImageView.freeMemCanvas();
     }
 
     public void addItemOnSpiner() {
