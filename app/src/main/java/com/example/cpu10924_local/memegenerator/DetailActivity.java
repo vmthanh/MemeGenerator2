@@ -167,8 +167,15 @@ public class DetailActivity extends Activity {
                 BitmapFactory.Options bmOptions = new BitmapFactory.Options();
                 bmOptions.inJustDecodeBounds = true;
                 loadBitmap = BitmapFactory.decodeFile(params[0], bmOptions);
-                int newWidth = 300;
-                int newHeight = newWidth*bmOptions.outHeight/bmOptions.outWidth;
+                int newWidth, newHeight;
+                if (typeLoad == LOAD_IMAGE_VIEW)
+                {
+                     newWidth = 600;
+                     newHeight = newWidth*bmOptions.outHeight/bmOptions.outWidth;
+                }else{
+                     newWidth = 300;
+                     newHeight = newWidth*bmOptions.outHeight/bmOptions.outWidth;
+                }
                 bmOptions.inSampleSize = calculateInSampleSize(bmOptions,newWidth,newHeight);
                 bmOptions.inJustDecodeBounds = false;
                 loadBitmap = BitmapFactory.decodeFile(params[0], bmOptions);

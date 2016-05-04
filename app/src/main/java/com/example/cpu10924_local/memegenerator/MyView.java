@@ -232,7 +232,7 @@ public class MyView extends View {
             imageViewMatrix.reset();
             imageViewMatrix.setTranslate(0,0);
         }
-        bitmapHolder.scaleBitmap(imageViewWidth,imageViewHeight, JniBitmapHolder.ScaleMethod.NearestNeighbour);
+        bitmapHolder.scaleBitmap(imageViewWidth,imageViewHeight, JniBitmapHolder.ScaleMethod.BilinearInterpolation);
        // bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
         bmpImage = bitmapHolder.getBitmap();
         if (saveBitmap==null)
@@ -271,9 +271,10 @@ public class MyView extends View {
             imageViewMatrix.reset();
             imageViewMatrix.setTranslate(0,0);
         }
-        bitmapHolder.scaleBitmap(imageViewWidth,imageViewHeight, JniBitmapHolder.ScaleMethod.NearestNeighbour);
+        bitmapHolder.scaleBitmap(imageViewWidth,imageViewHeight, JniBitmapHolder.ScaleMethod.BilinearInterpolation);
        // bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
         bmpImage = bitmapHolder.getBitmap();
+
 
        // saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
         saveBitmap = getResizedBitmap(saveBitmap,imageViewWidth,imageViewHeight);
@@ -369,9 +370,9 @@ public class MyView extends View {
                 Sticker sticker = (Sticker) objectDrawList.get(i);
 
                 float padding = 80;
-                float left = sticker.x-padding;
+                float left = sticker.x;
                 float right = sticker.x + sticker.canvasWidth +padding;
-                float top = sticker.y - padding;
+                float top = sticker.y;
                 float bottom = sticker.y + sticker.canvasHeight +padding;
                 if (top <= locY && locY <= bottom)
                 {
