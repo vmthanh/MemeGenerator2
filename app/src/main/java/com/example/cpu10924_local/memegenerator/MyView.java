@@ -428,6 +428,10 @@ public class MyView extends View {
 
         }
     }
+    public Bitmap getSaveBitmap()
+    {
+        return saveBitmap;
+    }
 
     public void saveImage()
     {

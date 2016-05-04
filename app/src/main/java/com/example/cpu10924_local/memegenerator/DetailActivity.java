@@ -36,7 +36,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -56,6 +58,7 @@ public class DetailActivity extends Activity {
     private Button AddMemeStickerBtn;
     private Button AddCaptionBtn;
     private ImageView RotateBtn;
+    private ImageView ShareBtn;
     private Spinner FontSpinner;
     private Button ColorSpinner;
     private static final int CHOOSE_IMAGE_REQUEST = 1;
@@ -153,8 +156,8 @@ public class DetailActivity extends Activity {
         protected void onPostExecute(Bitmap bitmap) {
             if (typeLoad == LOAD_IMAGE_VIEW)
             {
-                bmpImage = bitmap;
-                getMemeImageView(angle);
+               // bmpImage = bitmap;
+                getMemeImageView(bitmap,angle);
             }else{
                 addMemeSticker(bitmap,angle);
             }
@@ -228,6 +231,31 @@ public class DetailActivity extends Activity {
         getSticketButton();
         getSaveButton();
         getRotateButton();
+        getShareButton();
+    }
+    private void getShareButton()
+    {
+        ShareBtn = (ImageView)findViewById(R.id.ShareImageButton);
+        ShareBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                shareIt();
+            }
+        });
+    }
+    private void shareIt()
+    {
+        Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+        sharingIntent.setType("image/jpeg");
+       sharingIntent.putExtra(Intent.EXTRA_STREAM,getImageUri(getApplicationContext(),MemeImageView.getSaveBitmap()));
+        startActivity(Intent.createChooser(sharingIntent, "Share via"));
+    }
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        Toast.makeText(getApplicationContext(),"Image is saved",Toast.LENGTH_SHORT).show();
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        //inImage.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
     }
 
     private void getFontSpinner()
@@ -399,15 +427,17 @@ public class DetailActivity extends Activity {
 
     CaptionText captionTextClicked;
 
-    private void getMemeImageView(int angle) {
+    private void getMemeImageView(Bitmap bitmap,int angle) {
+        bmpImage = bitmap;
         MemeImageView = (MyView)findViewById(R.id.myview);
         if (angle!=0)
         {
             Matrix matrix = new Matrix();
             matrix.postRotate(angle);
-            bmpImage = Bitmap.createBitmap(bmpImage,0,0,bmpImage.getWidth(),bmpImage.getHeight(),matrix,false);
+            bmpImage = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,false);
         }
         MemeImageView.setCanvasBitmap(bmpImage);
+
         MemeImageView.setOnTouchCustomView(new MyView.MyViewCustomListener() {
             @Override
             public void onCaptionTextClicked(CaptionText captionText) {
