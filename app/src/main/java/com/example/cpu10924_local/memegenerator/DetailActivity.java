@@ -252,7 +252,7 @@ public class DetailActivity extends Activity {
     }
     public Uri getImageUri(Context inContext, Bitmap inImage) {
         Toast.makeText(getApplicationContext(),"Image is saved",Toast.LENGTH_SHORT).show();
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        //ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         //inImage.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
         String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
         return Uri.parse(path);
