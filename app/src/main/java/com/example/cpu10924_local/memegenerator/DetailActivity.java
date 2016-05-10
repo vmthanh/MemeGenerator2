@@ -45,6 +45,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import jp.co.cyberagent.android.gpuimage.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.GPUImageTransformFilter;
+import jp.co.cyberagent.android.gpuimage.GPUImageView;
 import yuku.ambilwarna.AmbilWarnaDialog;
 
 /**
@@ -66,6 +69,10 @@ public class DetailActivity extends Activity {
     private static final int LOAD_STICKER_VIEW = 3;
     private LinearLayout TextSetting;
     private ImageView deleteIcon;
+    /*--------------------------------------------*/
+    private GPUImageTransformFilter mFilter;
+    private GPUImageView mGPUImageView;
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -202,7 +209,7 @@ public class DetailActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.custom_view);
+        setContentView(R.layout.custom_gpu_view);
         Uri imageUri = getIntent().getParcelableExtra("bitmapUri");
         String imagePath = getIntent().getStringExtra("imagePath");
         if (imageUri !=null)
@@ -224,11 +231,11 @@ public class DetailActivity extends Activity {
         }
 
 
-        TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
+      /*  TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
         getFontSpinner();
         getDeleteButton();
         getAddCaptionBtn();
-        getSticketButton();
+        getSticketButton();*/
         getSaveButton();
         getRotateButton();
         getShareButton();
@@ -278,14 +285,19 @@ public class DetailActivity extends Activity {
             }
         });
     }
-
+    private float angle = 90;
     private void getRotateButton() {
         RotateBtn = (ImageView)findViewById(R.id.RotateBtn);
         RotateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MemeImageView.rotateImage(90);
-                MemeImageView.invalidate();
+                final float[] transform = new float[16];
+                angle = (angle + 90)%360;
+                android.opengl.Matrix.setRotateM(transform, 0, angle, 0, 0, 1.0f);
+                mFilter.setTransform3D(transform);
+                mGPUImageView.requestRender();
+                //MemeImageView.rotateImage(90);
+               // MemeImageView.invalidate();
             }
         });
 
@@ -429,16 +441,20 @@ public class DetailActivity extends Activity {
 
     private void getMemeImageView(Bitmap bitmap,int angle) {
         bmpImage = bitmap;
-        MemeImageView = (MyView)findViewById(R.id.myview);
+       // MemeImageView = (MyView)findViewById(R.id.myview);
+        mGPUImageView = (GPUImageView)findViewById(R.id.surfaceView);
         if (angle!=0)
         {
             Matrix matrix = new Matrix();
             matrix.postRotate(angle);
             bmpImage = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,false);
         }
-        MemeImageView.setCanvasBitmap(bmpImage);
+        mFilter = new GPUImageTransformFilter();
+        mGPUImageView.setFilter(mFilter);
+        mGPUImageView.setImage(bmpImage);
+       // MemeImageView.setCanvasBitmap(bmpImage);
 
-        MemeImageView.setOnTouchCustomView(new MyView.MyViewCustomListener() {
+       /* MemeImageView.setOnTouchCustomView(new MyView.MyViewCustomListener() {
             @Override
             public void onCaptionTextClicked(CaptionText captionText) {
                 captionTextClicked = captionText;
@@ -464,15 +480,16 @@ public class DetailActivity extends Activity {
                     deleteIcon.setVisibility(View.INVISIBLE);
                 }
             }
-        });
+        });*/
 
     }
 
-    @Override
+
+   /* @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         MemeImageView.freeMemCanvas();
-    }
+    }*/
 
     public void addItemOnSpiner() {
         switch ((int)captionTextClicked.paint.getTextSize())

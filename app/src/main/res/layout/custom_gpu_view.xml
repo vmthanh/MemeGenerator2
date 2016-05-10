@@ -3,44 +3,42 @@
     xmlns:custom="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
-    >
-
+    android:background="#000000">
     <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="3"
+        android:id="@+id/TextSetting"
+        android:visibility="invisible">
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/MemeEditText"
+            android:layout_weight="1"
+            android:hint="Text"
+            android:textColor="#ffffff"
+            android:textColorHint="#ffffff"
+            android:inputType="text"
+            android:imeOptions="actionDone"
+            />
+
+        <Spinner
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:prompt="@string/font_size_promp"
+            android:spinnerMode="dialog"
+            android:id="@+id/FontSpinner"
+            android:layout_weight="1"
+            android:theme="@style/Theme.NoTitleBar.WithColoredSpinners"
+            ></Spinner>
+        <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="3"
-            android:id="@+id/TextSetting"
-            android:visibility="invisible">
-            <EditText
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:id="@+id/MemeEditText"
-                android:layout_weight="1"
-                android:hint="Text"
-                android:textColor="#ffffff"
-                android:textColorHint="#ffffff"
-                android:inputType="text"
-                android:imeOptions="actionDone"
-                />
-
-            <Spinner
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:prompt="@string/font_size_promp"
-                android:spinnerMode="dialog"
-                android:id="@+id/FontSpinner"
-                android:layout_weight="1"
-                android:theme="@style/Theme.NoTitleBar.WithColoredSpinners"
-                ></Spinner>
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/ColorSpinner"
-                android:text="Color"
-                android:layout_weight="1"/>
-        </LinearLayout>
+            android:id="@+id/ColorSpinner"
+            android:text="Color"
+            android:layout_weight="1"/>
+    </LinearLayout>
     <ImageView
         android:layout_width="30dp"
         android:layout_height="30dp"
@@ -50,36 +48,34 @@
         android:visibility="invisible"
         android:layout_below="@+id/TextSetting"
         />
-
-    <com.example.cpu10924_local.memegenerator.MyView
+    <jp.co.cyberagent.android.gpuimage.GPUImageView
+        android:id="@+id/surfaceView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/myview"
         android:layout_below="@+id/deleteIcon"
         android:layout_above="@+id/actionBtn"
         />
-
     <LinearLayout
         android:id="@+id/actionBtn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_alignParentBottom="true"
-     >
+        >
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:weightSum="2"
             android:orientation="horizontal"
-           >
+            >
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/AddMemeStickerBtn"
                 android:text="Add Sticker"
                 android:layout_weight="1"
-               />
+                />
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -97,13 +93,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/RotateBtn"
-               android:src="@drawable/rotate_icon"
+                android:src="@drawable/rotate_icon"
                 android:layout_weight="1"/>
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/SaveImageButton"
-               android:src="@drawable/save_icon"
+                android:src="@drawable/save_icon"
                 android:layout_weight="1"/>
             <ImageView
                 android:layout_width="match_parent"
@@ -115,6 +111,5 @@
 
 
     </LinearLayout>
-
 
 </RelativeLayout>
