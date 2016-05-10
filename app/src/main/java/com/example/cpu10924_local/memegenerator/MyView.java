@@ -206,7 +206,7 @@ public class MyView extends View {
     }
     public void freeMemCanvas()
     {
-        bitmapHolder.freeBitmap();
+       // bitmapHolder.freeBitmap();
         bmpImage.recycle();
         saveBitmap.recycle();
        // bitmapHolderSavedBitmap.freeBitmap();
@@ -236,7 +236,7 @@ public class MyView extends View {
         }
         bitmapHolder.scaleBitmap(imageViewWidth,imageViewHeight, JniBitmapHolder.ScaleMethod.BilinearInterpolation);
        // bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
-        bmpImage = bitmapHolder.getBitmap();
+        bmpImage = bitmapHolder.getBitmapAndFree();
         if (saveBitmap==null)
         {
             saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
@@ -251,6 +251,7 @@ public class MyView extends View {
 
     public void rotateImage(int angle)
     {
+        bitmapHolder.storeBitmap(bmpImage);
         bmpImage.recycle();
         bitmapHolder.rotateBitmapCw90();
         //matrix = new Matrix();
@@ -275,7 +276,7 @@ public class MyView extends View {
         }
         bitmapHolder.scaleBitmap(imageViewWidth,imageViewHeight, JniBitmapHolder.ScaleMethod.BilinearInterpolation);
        // bmpImage = getResizedBitmap(bmpImage, imageViewWidth, imageViewHeight);
-        bmpImage = bitmapHolder.getBitmap();
+        bmpImage = bitmapHolder.getBitmapAndFree();
 
 
         //saveBitmap = Bitmap.createBitmap(imageViewWidth, imageViewHeight, Bitmap.Config.RGB_565);
