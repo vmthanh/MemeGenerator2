@@ -5,7 +5,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -19,6 +18,10 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import jp.co.cyberagent.android.gpuimage.CaptionText;
+import jp.co.cyberagent.android.gpuimage.ObjectDraw;
+import jp.co.cyberagent.android.gpuimage.Sticker;
 
 /**
  * Created by CPU10924-local on 3/29/2016.

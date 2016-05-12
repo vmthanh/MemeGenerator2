@@ -16,9 +16,11 @@
 
 package jp.co.cyberagent.android.gpuimage;
 
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.Rect;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaScannerConnection;
@@ -27,7 +29,9 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.*;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
@@ -36,15 +40,18 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 
 public class GPUImageView extends FrameLayout {
 
-    private GLSurfaceView mGLSurfaceView;
+    private GPUImageGLSurfaceView mGLSurfaceView;
     private GPUImage mGPUImage;
     private GPUImageFilter mFilter;
     public Size mForceSize = null;
     private float mRatio = 0.0f;
+
 
     public GPUImageView(Context context) {
         super(context);
@@ -343,6 +350,12 @@ public class GPUImageView extends FrameLayout {
         mGLSurfaceView.onResume();
     }
 
+
+    public void setTextCaption(CaptionText captionText) {
+        mGLSurfaceView.setTextCaption(captionText);
+
+    }
+
     public static class Size {
         int width;
         int height;
@@ -353,7 +366,11 @@ public class GPUImageView extends FrameLayout {
         }
     }
 
+
     private class GPUImageGLSurfaceView extends GLSurfaceView {
+        private int gpuImageGLSurfaceViewWidth;
+        private int gpuImageGLSurfaceViewHeight;
+        private List<CaptionText> captionTextList = new ArrayList<>();
         public GPUImageGLSurfaceView(Context context) {
             super(context);
         }
@@ -364,12 +381,128 @@ public class GPUImageView extends FrameLayout {
 
         @Override
         protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            gpuImageGLSurfaceViewHeight = MeasureSpec.getSize(heightMeasureSpec);
+            gpuImageGLSurfaceViewWidth = MeasureSpec.getSize(widthMeasureSpec);
             if (mForceSize != null) {
                 super.onMeasure(MeasureSpec.makeMeasureSpec(mForceSize.width, MeasureSpec.EXACTLY),
                         MeasureSpec.makeMeasureSpec(mForceSize.height, MeasureSpec.EXACTLY));
             } else {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec);
             }
+        }
+
+        private float initX;
+        private float initY;
+        private CaptionText captionTextClicked = null;
+        private Sticker stickerClicked = null;
+        private float mScaleFactor = 1f;
+        static final int NONE = 100;
+        static final int DRAG = 200;
+        static final int ZOOM = 300;
+        int mode = NONE;
+        float oldDist = 1f;
+        float newDist = 1f;
+
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            super.onTouchEvent(event);
+            switch (event.getAction() & MotionEvent.ACTION_MASK){
+                case MotionEvent.ACTION_DOWN:
+                    captionTextClicked = getInitCaptionTextLocation(event.getX(),gpuImageGLSurfaceViewHeight - event.getY());
+                    mode = DRAG;
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP:
+                    mode = NONE;
+                    break;
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    if (mode == DRAG)
+                    {
+                        float x = event.getX();
+                        float y = gpuImageGLSurfaceViewHeight -event.getY();
+                        moveObject(x,y);
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            return true;
+        }
+
+        private void moveObject(float newX, float newY) {
+            if (captionTextClicked != null)
+            {
+                float deltaX = newX - initX;
+                float deltaY = newY - initY;
+                int indexCaptionTextClicked = captionTextList.indexOf(captionTextClicked);
+                captionTextClicked.x += deltaX;
+                captionTextClicked.y += deltaY;
+                initX = newX;
+                initY = newY;
+                updateCaptionText(indexCaptionTextClicked,captionTextClicked);
+                requestRender();
+            }
+        }
+
+        private void updateCaptionText(int indexCaptionTextClicked,CaptionText captionTextClicked) {
+            mGPUImage.updateCaptionText(indexCaptionTextClicked,captionTextClicked);
+        }
+
+        private CaptionText getInitCaptionTextLocation(float locX, float locY) {
+            Log.v("LocX: ",String.valueOf(locX));
+            Log.v("LocY: ",String.valueOf(locY));
+            for(int i=captionTextList.size()-1;i>=0; i--)
+            {
+                CaptionText captionText = captionTextList.get(i);
+                Rect bound = new Rect();
+                captionText.paint.getTextBounds(captionText.content,0,captionText.content.length(),bound);
+                float padding = 50;
+                float left = captionText.x -padding;
+                float top = captionText.y- bound.height()-padding;
+                float right = captionText.x + bound.width() +2*padding;
+                float bottom = captionText.y + bound.height() ;
+
+                if (top <= locY && locY <=bottom)
+                {
+                    if(left <=locX && locX <=right)
+                    {
+                        initX = locX;
+                        initY = locY;
+                        return captionText;
+                    }
+                }
+            }
+            return  null;
+        }
+
+        public void setTextCaption(CaptionText captionText)
+        {
+            Rect bound = new Rect();
+            captionText.paint.getTextBounds(captionText.content,0,captionText.content.length(),bound);
+            //Move text to center
+            captionText.x = gpuImageGLSurfaceViewWidth /2 -bound.width()/2;
+            switch (captionTextList.size())
+            {
+                //Move text to bottom
+                case 1:
+                    captionText.y = gpuImageGLSurfaceViewHeight;
+                    break;
+                //Move text to middle
+                case 2:
+                    captionText.y = gpuImageGLSurfaceViewHeight/2 - bound.height()/2;
+                    break;
+                //Otherwise, move up
+                default:
+
+                    break;
+
+            }
+            captionTextList.add(captionText);
+            mGPUImage.setTextCaption(captionText);
         }
     }
 

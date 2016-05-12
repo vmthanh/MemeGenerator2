@@ -11,7 +11,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.PointF;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -24,7 +23,6 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -38,16 +36,11 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import jp.co.cyberagent.android.gpuimage.GPUImageFilter;
+import jp.co.cyberagent.android.gpuimage.CaptionText;
+import jp.co.cyberagent.android.gpuimage.GPUImage;
 import jp.co.cyberagent.android.gpuimage.GPUImageTransformFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageView;
+import jp.co.cyberagent.android.gpuimage.Sticker;
 import yuku.ambilwarna.AmbilWarnaDialog;
 
 /**
@@ -234,8 +227,9 @@ public class DetailActivity extends Activity {
       /*  TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
         getFontSpinner();
         getDeleteButton();
-        getAddCaptionBtn();
+
         getSticketButton();*/
+        getAddCaptionBtn();
         getSaveButton();
         getRotateButton();
         getShareButton();
@@ -259,8 +253,6 @@ public class DetailActivity extends Activity {
     }
     public Uri getImageUri(Context inContext, Bitmap inImage) {
         Toast.makeText(getApplicationContext(),"Image is saved",Toast.LENGTH_SHORT).show();
-        //ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        //inImage.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
         String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
         return Uri.parse(path);
     }
@@ -285,19 +277,18 @@ public class DetailActivity extends Activity {
             }
         });
     }
-    private float angle = 90;
+    private float angle = 0;
     private void getRotateButton() {
         RotateBtn = (ImageView)findViewById(R.id.RotateBtn);
         RotateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final float[] transform = new float[16];
-                angle = (angle + 90)%360;
+                angle = (angle - 90)%360;
                 android.opengl.Matrix.setRotateM(transform, 0, angle, 0, 0, 1.0f);
                 mFilter.setTransform3D(transform);
                 mGPUImageView.requestRender();
-                //MemeImageView.rotateImage(90);
-               // MemeImageView.invalidate();
+
             }
         });
 
@@ -312,6 +303,7 @@ public class DetailActivity extends Activity {
             public void onClick(View v) {
 
 
+
                 final Typeface blockFont = Typeface.createFromAsset(getAssets(), "fonts/ufonts.com_impact.ttf");
                 Paint paintText = new Paint();
                 paintText.setColor(Color.WHITE);
@@ -324,8 +316,10 @@ public class DetailActivity extends Activity {
                 strokePaint.setStrokeWidth(20);
                 strokePaint.setColor(Color.BLACK);
                 strokePaint.setAntiAlias(true);
-                CaptionText captionText = new CaptionText("Caption", 50, 100, paintText,strokePaint);
-                MemeImageView.addTextCaption(captionText);
+                CaptionText captionText = new CaptionText("Caption", 200, 0, paintText,strokePaint);
+                mGPUImageView.setTextCaption(captionText);
+
+
 
             }
         });
@@ -449,9 +443,13 @@ public class DetailActivity extends Activity {
             matrix.postRotate(angle);
             bmpImage = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,false);
         }
+
+
         mFilter = new GPUImageTransformFilter();
         mGPUImageView.setFilter(mFilter);
+        mGPUImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
         mGPUImageView.setImage(bmpImage);
+
        // MemeImageView.setCanvasBitmap(bmpImage);
 
        /* MemeImageView.setOnTouchCustomView(new MyView.MyViewCustomListener() {

@@ -41,6 +41,7 @@ import android.view.WindowManager;
 
 import java.io.*;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -56,6 +57,7 @@ public class GPUImage {
     private Bitmap mCurrentBitmap;
     private ScaleType mScaleType = ScaleType.CENTER_CROP;
 
+
     /**
      * Instantiates a new GPUImage object.
      *
@@ -68,7 +70,7 @@ public class GPUImage {
 
         mContext = context;
         mFilter = new GPUImageFilter();
-        mRenderer = new GPUImageRenderer(mFilter);
+        mRenderer = new GPUImageRenderer(mContext,mFilter);
     }
 
     /**
@@ -426,6 +428,24 @@ public class GPUImage {
             Display display = windowManager.getDefaultDisplay();
             return display.getHeight();
         }
+    }
+
+    public void setTextCaption(String text, float locX, float locY) {
+        mRenderer.setTextCaption(text,locX,locY);
+        requestRender();
+    }
+
+    public void setTextCaption(CaptionText captionText) {
+        mRenderer.setTextCaption(captionText);
+        requestRender();
+
+    }
+
+
+    public void updateCaptionText(int indexCaptionTextClicked,CaptionText captionTextClicked) {
+        mRenderer.updateCaptionText(indexCaptionTextClicked,captionTextClicked);
+        requestRender();
+
     }
 
     @Deprecated

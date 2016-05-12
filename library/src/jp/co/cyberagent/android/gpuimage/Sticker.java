@@ -1,16 +1,14 @@
-package com.example.cpu10924_local.memegenerator;
+package jp.co.cyberagent.android.gpuimage;
 
-import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 
-import java.io.InputStream;
+import jp.co.cyberagent.android.gpuimage.ObjectDraw;
 
 /**
  * Created by ThanhVo on 3/31/2016.
  */
-public class Sticker extends ObjectDraw{
+public class Sticker extends ObjectDraw {
 
     public Matrix matrix;
     public Drawable drawable;

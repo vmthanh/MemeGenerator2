@@ -4,7 +4,6 @@ package com.example.cpu10924_local.memegenerator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -19,13 +18,14 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.PopupWindow;
 import android.widget.Toast;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -61,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         customListAdapter.setOnItemClickListener(onItemClickListener);
         memeList.swapAdapter(customListAdapter, false);
     }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -9,7 +9,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.PointF;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -20,9 +19,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -36,10 +33,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-
+import jp.co.cyberagent.android.gpuimage.CaptionText;
+import jp.co.cyberagent.android.gpuimage.Sticker;
 import yuku.ambilwarna.AmbilWarnaDialog;
 
 /**

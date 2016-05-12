@@ -4,19 +4,13 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Movie;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -24,15 +18,17 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.io.File;
+
+import jp.co.cyberagent.android.gpuimage.CaptionText;
+import jp.co.cyberagent.android.gpuimage.ObjectDraw;
+import jp.co.cyberagent.android.gpuimage.Sticker;
 
 /**
  * Created by CPU10924-local on 4/4/2016.

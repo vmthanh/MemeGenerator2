@@ -17,6 +17,7 @@
 package jp.co.cyberagent.android.gpuimage;
 
 import android.annotation.TargetApi;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.SurfaceTexture;
@@ -25,17 +26,21 @@ import android.hardware.Camera.PreviewCallback;
 import android.hardware.Camera.Size;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView.Renderer;
+import android.opengl.Matrix;
 
 import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
@@ -77,6 +82,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     private float mBackgroundGreen = 0;
     private float mBackgroundBlue = 0;
 
+    private Context mContext;
+
     public GPUImageRenderer(final GPUImageFilter filter) {
         mFilter = filter;
         mRunOnDraw = new LinkedList<Runnable>();
@@ -93,10 +100,23 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         setRotation(Rotation.NORMAL, false, false);
     }
 
+    public GPUImageRenderer(Context context, final GPUImageFilter filter) {
+        this(filter);
+        mContext = context;
+
+    }
+
+    private GLText glText;
+
     @Override
     public void onSurfaceCreated(final GL10 unused, final EGLConfig config) {
         GLES20.glClearColor(mBackgroundRed, mBackgroundGreen, mBackgroundBlue, 1);
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
+        glText = new GLText(mContext.getAssets());
+        glText.load("ufonts.com_impact.ttf", 100, 2, 2);
+        // enable texture + alpha blending
+        GLES20.glEnable(GLES20.GL_BLEND);
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
         mFilter.init();
     }
 
@@ -108,16 +128,35 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         GLES20.glUseProgram(mFilter.getProgram());
         mFilter.onOutputSizeChanged(width, height);
         adjustImageScaling();
+
+        float ratio = (float) width / height;
+
+        if (width > height) {
+            Matrix.frustumM(mProjMatrix, 0, -ratio, ratio, -1, 1, 1, 100);
+        }
+        else {
+            Matrix.frustumM(mProjMatrix, 0, -1, 1, -1/ratio, 1/ratio, 1, 100);
+        }
+
+        Matrix.orthoM(mProjMatrix,0,0f,width,0f,height,0,100);
+        Matrix.setLookAtM(mVMatrix,0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+
         synchronized (mSurfaceChangedWaiter) {
             mSurfaceChangedWaiter.notifyAll();
         }
     }
+
+    private float[] mProjMatrix = new float[16];
+    private float[] mVMatrix = new float[16];
+    private float[] mVPMatrix = new float[16];
+    private List<CaptionText> captionTextList = new ArrayList<>();
 
     @Override
     public void onDrawFrame(final GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         runAll(mRunOnDraw);
         mFilter.onDraw(mGLTextureId, mGLCubeBuffer, mGLTextureBuffer);
+        updateCaptionTextListOnDraw();
         runAll(mRunOnDrawEnd);
         if (mSurfaceTexture != null) {
             mSurfaceTexture.updateTexImage();
@@ -127,9 +166,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     /**
      * Sets the background color
      *
-     * @param red red color value
+     * @param red   red color value
      * @param green green color value
-     * @param blue red color value
+     * @param blue  red color value
      */
     public void setBackgroundColor(float red, float green, float blue) {
         mBackgroundRed = red;
@@ -159,7 +198,6 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
                             mGLRgbBuffer.array());
                     mGLTextureId = OpenGlUtils.loadTexture(mGLRgbBuffer, previewSize, mGLTextureId);
                     camera.addCallbackBuffer(data);
-
                     if (mImageWidth != previewSize.width) {
                         mImageWidth = previewSize.width;
                         mImageHeight = previewSize.height;
@@ -268,6 +306,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     }
 
     private void adjustImageScaling() {
+
         float outputWidth = mOutputWidth;
         float outputHeight = mOutputHeight;
         if (mRotation == Rotation.ROTATION_270 || mRotation == Rotation.ROTATION_90) {
@@ -315,7 +354,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     }
 
     public void setRotationCamera(final Rotation rotation, final boolean flipHorizontal,
-            final boolean flipVertical) {
+                                  final boolean flipVertical) {
         setRotation(rotation, flipVertical, flipHorizontal);
     }
 
@@ -354,4 +393,47 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
             mRunOnDrawEnd.add(runnable);
         }
     }
+
+    public void setTextCaption(final String text, final float locX, final float locY) {
+        runOnDrawEnd(new Runnable() {
+            @Override
+            public void run() {
+                Matrix.multiplyMM(mVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
+                glText.begin(0.0f, 0.0f, 1.0f, 1.0f, mVPMatrix);
+                glText.draw(text, locX, locY, 0);
+                glText.end();
+
+            }
+        });
+    }
+
+    public void setTextCaption(CaptionText captionText)
+    {
+        captionTextList.add(captionText);
+        updateCaptionTextListOnDraw();
+
+    }
+
+    private void updateCaptionTextListOnDraw() {
+        mRunOnDrawEnd.clear();
+        for(int i=captionTextList.size()-1; i>=0; --i)
+        {
+            final CaptionText captionText = captionTextList.get(i);
+            runOnDrawEnd(new Runnable() {
+                @Override
+                public void run() {
+                    Matrix.multiplyMM(mVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
+                    glText.begin(0.0f, 0.0f, 1.0f, 1.0f, mVPMatrix);
+                    glText.draw(captionText.content, captionText.x, captionText.y, 0);
+                    glText.end();
+                }
+            });
+        }
+    }
+
+    public void updateCaptionText(int indexCaptionTextClicked, CaptionText captionTextClicked) {
+        captionTextList.set(indexCaptionTextClicked,captionTextClicked);
+    }
+
+
 }

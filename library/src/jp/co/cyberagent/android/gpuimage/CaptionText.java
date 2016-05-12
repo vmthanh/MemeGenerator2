@@ -1,4 +1,4 @@
-package com.example.cpu10924_local.memegenerator;
+package jp.co.cyberagent.android.gpuimage;
 
 import android.graphics.Paint;
 
