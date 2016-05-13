@@ -21,8 +21,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
-import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.opengl.GLES20;
@@ -351,9 +349,13 @@ public class GPUImageView extends FrameLayout {
     }
 
 
-    public void setTextCaption(CaptionText captionText) {
-        mGLSurfaceView.setTextCaption(captionText);
+    public void addCaptionText(CaptionText captionText) {
+        mGLSurfaceView.addCaptionText(captionText);
 
+    }
+
+    public void deleteClckedObject() {
+        mGLSurfaceView.deleteClickedObject();
     }
 
     public static class Size {
@@ -364,6 +366,16 @@ public class GPUImageView extends FrameLayout {
             this.width = width;
             this.height = height;
         }
+    }
+
+    public interface GPUImageViewListerner{
+        void onCaptionTextClicked(CaptionText captionText);
+        void onStickerClicked(Sticker sticker);
+    }
+    private GPUImageViewListerner listener;
+    public void setOnTouchGPUImageView(GPUImageViewListerner listener)
+    {
+        this.listener = listener;
     }
 
 
@@ -402,14 +414,41 @@ public class GPUImageView extends FrameLayout {
         int mode = NONE;
         float oldDist = 1f;
         float newDist = 1f;
-
-
         @Override
         public boolean onTouchEvent(MotionEvent event) {
             super.onTouchEvent(event);
             switch (event.getAction() & MotionEvent.ACTION_MASK){
                 case MotionEvent.ACTION_DOWN:
-                    captionTextClicked = getInitCaptionTextLocation(event.getX(),gpuImageGLSurfaceViewHeight - event.getY());
+                    if (listener!=null)
+                    {
+                        captionTextClicked = getCaptionTextLocation(event.getX(),gpuImageGLSurfaceViewHeight - event.getY());
+                        stickerClicked = getStickerLocation(event.getX(),event.getY());
+                        if (captionTextClicked !=null && stickerClicked !=null)
+                        {
+                            if (captionTextClicked.drawOrder > stickerClicked.drawOrder)
+                            {
+                                stickerClicked = null;
+                            }
+                            else{
+                                captionTextClicked = null;
+                            }
+                        }
+                        if (captionTextClicked == null)
+                        {
+                            listener.onCaptionTextClicked(null);
+                            //stickerClicked = getStickerLocation(event.getX(),event.getY());
+                            if (stickerClicked!=null)
+                            {
+                                listener.onStickerClicked(stickerClicked);
+                               // stickerClicked.sendToFront(objectDrawList);
+                            }else{
+                                listener.onStickerClicked(null);
+                            }
+                        }else{
+                            listener.onCaptionTextClicked(captionTextClicked);
+                           // captionTextClicked.sendToFront(objectDrawList);
+                        }
+                    }
                     mode = DRAG;
                     break;
                 case MotionEvent.ACTION_UP:
@@ -433,6 +472,8 @@ public class GPUImageView extends FrameLayout {
             return true;
         }
 
+
+
         private void moveObject(float newX, float newY) {
             if (captionTextClicked != null)
             {
@@ -452,7 +493,10 @@ public class GPUImageView extends FrameLayout {
             mGPUImage.updateCaptionText(indexCaptionTextClicked,captionTextClicked);
         }
 
-        private CaptionText getInitCaptionTextLocation(float locX, float locY) {
+        private Sticker getStickerLocation(float x, float y) {
+            return null;
+        }
+        private CaptionText getCaptionTextLocation(float locX, float locY) {
             Log.v("LocX: ",String.valueOf(locX));
             Log.v("LocY: ",String.valueOf(locY));
             for(int i=captionTextList.size()-1;i>=0; i--)
@@ -479,8 +523,9 @@ public class GPUImageView extends FrameLayout {
             return  null;
         }
 
-        public void setTextCaption(CaptionText captionText)
+        public void addCaptionText(CaptionText captionText)
         {
+
             Rect bound = new Rect();
             captionText.paint.getTextBounds(captionText.content,0,captionText.content.length(),bound);
             //Move text to center
@@ -489,20 +534,33 @@ public class GPUImageView extends FrameLayout {
             {
                 //Move text to bottom
                 case 1:
-                    captionText.y = gpuImageGLSurfaceViewHeight;
+                    captionText.y = 0;
                     break;
                 //Move text to middle
                 case 2:
-                    captionText.y = gpuImageGLSurfaceViewHeight/2 - bound.height()/2;
+                    captionText.y = gpuImageGLSurfaceViewHeight/2 - bound.height();
                     break;
-                //Otherwise, move up
+                //Otherwise, move top
                 default:
-
+                    captionText.y = gpuImageGLSurfaceViewHeight-bound.height()-15;
                     break;
 
             }
             captionTextList.add(captionText);
-            mGPUImage.setTextCaption(captionText);
+            mGPUImage.addCaptionText(captionText);
+        }
+
+        public void deleteClickedObject() {
+            if (stickerClicked !=null)
+            {
+
+            }
+            if (captionTextClicked !=null)
+            {
+                captionTextList.remove(captionTextClicked);
+                mGPUImage.deleteCaptionText(captionTextClicked);
+                requestRender();
+            }
         }
     }
 

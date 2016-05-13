@@ -64,7 +64,7 @@ public class DetailActivity extends Activity {
     private ImageView deleteIcon;
     /*--------------------------------------------*/
     private GPUImageTransformFilter mFilter;
-    private GPUImageView mGPUImageView;
+    private GPUImageView gpuImageView;
 
 
     @Override
@@ -74,13 +74,7 @@ public class DetailActivity extends Activity {
             case CHOOSE_IMAGE_REQUEST:
                 if (resultCode == RESULT_OK) {
                     Uri imageUri = data.getData();
-                    try{
-                        String realFilePath = getRealFilePath(imageUri);
-                        int angle = checkImageOrientation(realFilePath);
-                        new LoadImageToView(angle,LOAD_STICKER_VIEW).execute(realFilePath);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
+                    loadImageFromSource(getRealFilePath(imageUri),LOAD_STICKER_VIEW);
                 }
                 break;
             default:
@@ -207,33 +201,37 @@ public class DetailActivity extends Activity {
         String imagePath = getIntent().getStringExtra("imagePath");
         if (imageUri !=null)
         {
-            try{
-                int angle = checkImageOrientation(getRealFilePath(imageUri));
-                new LoadImageToView(angle,LOAD_IMAGE_VIEW).execute(getRealFilePath(imageUri));
-
-            }catch (Exception e)
-            {
-               e.printStackTrace();
-            }
+            loadImageFromSource(getRealFilePath(imageUri),LOAD_IMAGE_VIEW);
         }else if (imagePath !=null){
-            int angle = checkImageOrientation(imagePath);
-            new LoadImageToView(angle,LOAD_IMAGE_VIEW).execute(imagePath);
-
+            loadImageFromSource(imagePath,LOAD_IMAGE_VIEW);
         }else {
             Log.v("Error:", "Cannot pass parameter");
         }
+        loadComponentButtons();
 
+    }
 
-      /*  TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
+    private void loadImageFromSource(String imagePath,int typeLoad) {
+        try{
+            int angle = checkImageOrientation(imagePath);
+            new LoadImageToView(angle,typeLoad).execute(imagePath);
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadComponentButtons() {
+        TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
         getFontSpinner();
         getDeleteButton();
-
-        getSticketButton();*/
+        getSticketButton();
         getAddCaptionBtn();
         getSaveButton();
         getRotateButton();
         getShareButton();
     }
+
     private void getShareButton()
     {
         ShareBtn = (ImageView)findViewById(R.id.ShareImageButton);
@@ -270,8 +268,7 @@ public class DetailActivity extends Activity {
         deleteIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MemeImageView.DeleteObject();
-                MemeImageView.invalidate();
+                gpuImageView.deleteClckedObject();
                 deleteIcon.setVisibility(View.INVISIBLE);
                 TextSetting.setVisibility(View.INVISIBLE);
             }
@@ -287,7 +284,7 @@ public class DetailActivity extends Activity {
                 angle = (angle - 90)%360;
                 android.opengl.Matrix.setRotateM(transform, 0, angle, 0, 0, 1.0f);
                 mFilter.setTransform3D(transform);
-                mGPUImageView.requestRender();
+                gpuImageView.requestRender();
 
             }
         });
@@ -301,9 +298,6 @@ public class DetailActivity extends Activity {
         AddCaptionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-
-
                 final Typeface blockFont = Typeface.createFromAsset(getAssets(), "fonts/ufonts.com_impact.ttf");
                 Paint paintText = new Paint();
                 paintText.setColor(Color.WHITE);
@@ -317,9 +311,7 @@ public class DetailActivity extends Activity {
                 strokePaint.setColor(Color.BLACK);
                 strokePaint.setAntiAlias(true);
                 CaptionText captionText = new CaptionText("Caption", 200, 0, paintText,strokePaint);
-                mGPUImageView.setTextCaption(captionText);
-
-
+                gpuImageView.addCaptionText(captionText);
 
             }
         });
@@ -363,7 +355,7 @@ public class DetailActivity extends Activity {
                     @Override
                     public void onOk(AmbilWarnaDialog dialog, int color) {
                         captionTextClicked.paint.setColor(color);
-                        MemeImageView.invalidate();
+                        gpuImageView.requestRender();
                     }
                 });
                 dialog.show();
@@ -420,7 +412,8 @@ public class DetailActivity extends Activity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 captionTextClicked.content = s.toString();
-                MemeImageView.invalidate();
+                gpuImageView.requestRender();
+
             }
 
             @Override
@@ -431,12 +424,11 @@ public class DetailActivity extends Activity {
 
     }
 
-    CaptionText captionTextClicked;
+    private CaptionText captionTextClicked;
 
     private void getMemeImageView(Bitmap bitmap,int angle) {
         bmpImage = bitmap;
-       // MemeImageView = (MyView)findViewById(R.id.myview);
-        mGPUImageView = (GPUImageView)findViewById(R.id.surfaceView);
+        gpuImageView = (GPUImageView)findViewById(R.id.surfaceView);
         if (angle!=0)
         {
             Matrix matrix = new Matrix();
@@ -446,20 +438,19 @@ public class DetailActivity extends Activity {
 
 
         mFilter = new GPUImageTransformFilter();
-        mGPUImageView.setFilter(mFilter);
-        mGPUImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
-        mGPUImageView.setImage(bmpImage);
-
-       // MemeImageView.setCanvasBitmap(bmpImage);
-
-       /* MemeImageView.setOnTouchCustomView(new MyView.MyViewCustomListener() {
+        gpuImageView.setFilter(mFilter);
+        gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
+        gpuImageView.setImage(bmpImage);
+        gpuImageView.setOnTouchGPUImageView(new GPUImageView.GPUImageViewListerner() {
             @Override
             public void onCaptionTextClicked(CaptionText captionText) {
-                captionTextClicked = captionText;
-                if (captionTextClicked ==null)
+                if (captionText == null)
                 {
                     TextSetting.setVisibility(View.INVISIBLE);
-                }else{
+                    deleteIcon.setVisibility(View.INVISIBLE);
+                }
+                else{
+                    captionTextClicked = captionText;
                     deleteIcon.setVisibility(View.VISIBLE);
                     TextSetting.setVisibility(View.VISIBLE);
                     getEditText();
@@ -469,7 +460,7 @@ public class DetailActivity extends Activity {
             }
 
             @Override
-            public void onStickerTextClicked(Sticker sticker) {
+            public void onStickerClicked(Sticker sticker) {
                 if (sticker!=null)
                 {
                     deleteIcon.setVisibility(View.VISIBLE);
@@ -477,19 +468,46 @@ public class DetailActivity extends Activity {
                 }else{
                     deleteIcon.setVisibility(View.INVISIBLE);
                 }
-            }
-        });*/
 
+            }
+        });
     }
 
 
-   /* @Override
-    public void onDetachedFromWindow() {
-        super.onDetachedFromWindow();
-        MemeImageView.freeMemCanvas();
-    }*/
 
     public void addItemOnSpiner() {
+        getCurrentItemValue();
+        FontSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                switch (String.valueOf(parent.getItemAtPosition(position))) {
+                    case "Small":
+                        captionTextClicked.paint.setTextSize(100);
+                        break;
+                    case "Medium":
+                        captionTextClicked.paint.setTextSize(200);
+                        break;
+                    case "Large":
+                        captionTextClicked.paint.setTextSize(300);
+                        break;
+                    default:
+                        break;
+
+                }
+                gpuImageView.requestRender();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+
+
+    }
+
+    private void getCurrentItemValue() {
         switch ((int)captionTextClicked.paint.getTextSize())
         {
             case 100:
@@ -504,46 +522,5 @@ public class DetailActivity extends Activity {
             default:
                 break;
         }
-        FontSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                switch (String.valueOf(parent.getItemAtPosition(position))) {
-                    case "Small":
-                        captionTextClicked.paint.setTextSize(100);
-                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokePaint.setStrokeWidth(20);
-                        captionTextClicked.strokePaint.setColor(Color.BLACK);
-                        break;
-                    case "Medium":
-                        captionTextClicked.paint.setTextSize(200);
-                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokePaint.setStrokeWidth(20);
-                        captionTextClicked.strokePaint.setColor(Color.BLACK);
-                        break;
-                    case "Large":
-                        captionTextClicked.paint.setTextSize(300);
-                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokePaint.setStrokeWidth(20);
-                        captionTextClicked.strokePaint.setColor(Color.BLACK);
-                        break;
-                    default:
-
-                        break;
-
-                }
-                MemeImageView.invalidate();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
-
-
     }
 }

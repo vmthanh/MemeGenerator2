@@ -20,6 +20,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
@@ -107,13 +108,14 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     }
 
     private GLText glText;
+    private static int TEXT_SIZE_STANDART = 100;
 
     @Override
     public void onSurfaceCreated(final GL10 unused, final EGLConfig config) {
         GLES20.glClearColor(mBackgroundRed, mBackgroundGreen, mBackgroundBlue, 1);
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
         glText = new GLText(mContext.getAssets());
-        glText.load("ufonts.com_impact.ttf", 100, 2, 2);
+        glText.load("ufonts.com_impact.ttf", TEXT_SIZE_STANDART, 2, 2);
         // enable texture + alpha blending
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
@@ -394,20 +396,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         }
     }
 
-    public void setTextCaption(final String text, final float locX, final float locY) {
-        runOnDrawEnd(new Runnable() {
-            @Override
-            public void run() {
-                Matrix.multiplyMM(mVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
-                glText.begin(0.0f, 0.0f, 1.0f, 1.0f, mVPMatrix);
-                glText.draw(text, locX, locY, 0);
-                glText.end();
 
-            }
-        });
-    }
 
-    public void setTextCaption(CaptionText captionText)
+    public void addCaptionText(CaptionText captionText)
     {
         captionTextList.add(captionText);
         updateCaptionTextListOnDraw();
@@ -422,13 +413,25 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
             runOnDrawEnd(new Runnable() {
                 @Override
                 public void run() {
-                    Matrix.multiplyMM(mVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
-                    glText.begin(0.0f, 0.0f, 1.0f, 1.0f, mVPMatrix);
-                    glText.draw(captionText.content, captionText.x, captionText.y, 0);
-                    glText.end();
+                    drawCaptionText(captionText);
+
                 }
             });
         }
+    }
+
+    private void drawCaptionText(CaptionText captionText) {
+        Matrix.multiplyMM(mVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
+
+        float red = (float)Color.red(captionText.paint.getColor())/255;
+        float green = (float)Color.green(captionText.paint.getColor())/255;
+        float blue = (float)Color.blue(captionText.paint.getColor())/255;
+        float alpha = 1.0f;
+
+        glText.begin(red, green, blue, alpha, mVPMatrix);
+        glText.setScale(captionText.paint.getTextSize()/TEXT_SIZE_STANDART,captionText.paint.getTextSize()/TEXT_SIZE_STANDART);
+        glText.draw(captionText.content, captionText.x, captionText.y, 0);
+        glText.end();
     }
 
     public void updateCaptionText(int indexCaptionTextClicked, CaptionText captionTextClicked) {
@@ -436,4 +439,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     }
 
 
+    public void deleteCaptionText(CaptionText captionTextClicked) {
+        captionTextList.remove(captionTextClicked);
+    }
 }

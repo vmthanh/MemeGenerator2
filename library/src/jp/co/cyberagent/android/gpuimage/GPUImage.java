@@ -41,9 +41,7 @@ import android.view.WindowManager;
 
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Semaphore;
 
 /**
  * The main accessor for GPUImage functionality. This class helps to do common
@@ -430,13 +428,10 @@ public class GPUImage {
         }
     }
 
-    public void setTextCaption(String text, float locX, float locY) {
-        mRenderer.setTextCaption(text,locX,locY);
-        requestRender();
-    }
 
-    public void setTextCaption(CaptionText captionText) {
-        mRenderer.setTextCaption(captionText);
+
+    public void addCaptionText(CaptionText captionText) {
+        mRenderer.addCaptionText(captionText);
         requestRender();
 
     }
@@ -446,6 +441,10 @@ public class GPUImage {
         mRenderer.updateCaptionText(indexCaptionTextClicked,captionTextClicked);
         requestRender();
 
+    }
+
+    public void deleteCaptionText(CaptionText captionTextClicked) {
+        mRenderer.deleteCaptionText(captionTextClicked);
     }
 
     @Deprecated
