@@ -29,11 +29,6 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.Matrix;
 
-import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -43,6 +38,11 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+
+import jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil;
 
 import static jp.co.cyberagent.android.gpuimage.util.TextureRotationUtil.TEXTURE_NO_ROTATION;
 
@@ -112,14 +112,22 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     @Override
     public void onSurfaceCreated(final GL10 unused, final EGLConfig config) {
+        imageBacher = new ImageBacher();
+
         GLES20.glClearColor(mBackgroundRed, mBackgroundGreen, mBackgroundBlue, 1);
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
+
+
         glText = new GLText(mContext.getAssets());
         glText.load("ufonts.com_impact.ttf", TEXT_SIZE_STANDART, 2, 2);
         // enable texture + alpha blending
         GLES20.glEnable(GLES20.GL_BLEND);
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+        // Set the clear color to black
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1);
         mFilter.init();
+        ShaderImageHelper.initGlProgram();
+
     }
 
     @Override
@@ -127,7 +135,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         mOutputWidth = width;
         mOutputHeight = height;
         GLES20.glViewport(0, 0, width, height);
-        GLES20.glUseProgram(mFilter.getProgram());
+        GLES20.glUseProgram(ShaderImageHelper.programTexture);
+
+
         mFilter.onOutputSizeChanged(width, height);
         adjustImageScaling();
 
@@ -143,6 +153,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         Matrix.orthoM(mProjMatrix,0,0f,width,0f,height,0,100);
         Matrix.setLookAtM(mVMatrix,0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
+       //imageBacher.setScreenDimension(mProjMatrix);
+       imageBacher.setScreenDimension(width,height);
         synchronized (mSurfaceChangedWaiter) {
             mSurfaceChangedWaiter.notifyAll();
         }
@@ -152,13 +164,19 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     private float[] mVMatrix = new float[16];
     private float[] mVPMatrix = new float[16];
     private List<CaptionText> captionTextList = new ArrayList<>();
-
+    private List<Sticker> stickerList = new ArrayList<>();
+    private ImageBacher imageBacher;
     @Override
     public void onDrawFrame(final GL10 gl) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         runAll(mRunOnDraw);
+
+
         mFilter.onDraw(mGLTextureId, mGLCubeBuffer, mGLTextureBuffer);
-        updateCaptionTextListOnDraw();
+
+       // drawStickerList();
+        updateListObjectOnDraw();
+
         runAll(mRunOnDrawEnd);
         if (mSurfaceTexture != null) {
             mSurfaceTexture.updateTexImage();
@@ -309,6 +327,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     private void adjustImageScaling() {
 
+
         float outputWidth = mOutputWidth;
         float outputHeight = mOutputHeight;
         if (mRotation == Rotation.ROTATION_270 || mRotation == Rotation.ROTATION_90) {
@@ -401,12 +420,42 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     public void addCaptionText(CaptionText captionText)
     {
         captionTextList.add(captionText);
-        updateCaptionTextListOnDraw();
+        updateListObjectOnDraw();
 
     }
 
-    private void updateCaptionTextListOnDraw() {
+    private void updateListObjectOnDraw() {
         mRunOnDrawEnd.clear();
+        drawCaptionTextList();
+        drawStickerList();
+
+    }
+
+    private void drawStickerList() {
+        if (stickerList.size()>0)
+        {
+            runOnDrawEnd(new Runnable() {
+                @Override
+                public void run() {
+                    imageBacher.begin();
+                    for(int i=stickerList.size()-1; i>=0; --i)
+                    {
+                        final Sticker sticker = stickerList.get(i);
+                        imageBacher.drawSticker(sticker);
+
+
+                    }
+                    imageBacher.end();
+                }
+            });
+
+        }
+
+
+    }
+
+    private void drawCaptionTextList() {
+
         for(int i=captionTextList.size()-1; i>=0; --i)
         {
             final CaptionText captionText = captionTextList.get(i);
@@ -431,6 +480,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         glText.begin(red, green, blue, alpha, mVPMatrix);
         glText.setScale(captionText.paint.getTextSize()/TEXT_SIZE_STANDART,captionText.paint.getTextSize()/TEXT_SIZE_STANDART);
         glText.draw(captionText.content, captionText.x, captionText.y, 0);
+
         glText.end();
     }
 
@@ -442,4 +492,12 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     public void deleteCaptionText(CaptionText captionTextClicked) {
         captionTextList.remove(captionTextClicked);
     }
+
+
+    public void addSticker(Sticker sticker) {
+        stickerList.add(sticker);
+        updateListObjectOnDraw();
+    }
+
+
 }

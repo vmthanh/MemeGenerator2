@@ -6,12 +6,12 @@ import android.opengl.Matrix;
 /**
  * Created by CPU10924-local on 5/11/2016.
  */
-public class SpriteBatch {
+public class TextBacher {
     //--Constants--//
     final static int VERTEX_SIZE = 5;                  // Vertex Size (in Components) ie. (X,Y,U,V,M), M is MVP matrix index
     final static int VERTICES_PER_SPRITE = 4;          // Vertices Per Sprite
     final static int INDICES_PER_SPRITE = 6;           // Indices Per Sprite
-    private static final String TAG = "SpriteBatch";
+    private static final String TAG = "TextBacher";
 
     //--Members--//
     Verticies vertices;                                 // Vertices Instance Used for Rendering
@@ -28,7 +28,7 @@ public class SpriteBatch {
     // D: prepare the sprite batcher for specified maximum number of sprites
     // A: maxSprites - the maximum allowed sprites per batch
     //    program - program to use when drawing
-    public SpriteBatch(int maxSprites, GPUTextCaptionFilter program)  {
+    public TextBacher(int maxSprites, GPUTextCaptionFilter program)  {
         this.vertexBuffer = new float[maxSprites * VERTICES_PER_SPRITE * VERTEX_SIZE];  // Create Vertex Buffer
         this.vertices = new Verticies(maxSprites * VERTICES_PER_SPRITE, maxSprites * INDICES_PER_SPRITE);  // Create Rendering Vertices
         this.bufferIndex = 0;                           // Reset Buffer Index

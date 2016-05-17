@@ -25,12 +25,12 @@ public class GLText {
 
     public final static int CHAR_BATCH_SIZE = 24;     // Number of Characters to Render Per Batch
     // must be the same as the size of u_MVPMatrix
-    // in BatchTextProgram
+    // in ShaderTextHelperProgram
     private static final String TAG = "GLTEXT";
 
     //--Members--//
     AssetManager assets;                               // Asset Manager
-    SpriteBatch batch;                                 // Batch Renderer
+    TextBacher batch;                                 // Batch Renderer
 
     int fontPadX, fontPadY;                            // Font Padding (Pixels; On Each Side, ie. Doubled on Both X+Y Axis)
 
@@ -62,11 +62,11 @@ public class GLText {
     public GLText(GPUTextCaptionFilter program, AssetManager assets) {
         if (program == null)
         {
-            program = new BatchTextProgram();
+            program = new ShaderTextHelperProgram();
             program.init();
         }
         this.assets = assets;
-        batch = new SpriteBatch(CHAR_BATCH_SIZE,program);
+        batch = new TextBacher(CHAR_BATCH_SIZE,program);
         charWidths = new float[CHAR_CNT];
         charRgn = new TextureRegion[CHAR_CNT];
 

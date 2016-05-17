@@ -1,7 +1,6 @@
 package com.example.cpu10924_local.memegenerator;
 
 import android.app.Activity;
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -12,8 +11,6 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -40,6 +37,7 @@ import jp.co.cyberagent.android.gpuimage.CaptionText;
 import jp.co.cyberagent.android.gpuimage.GPUImage;
 import jp.co.cyberagent.android.gpuimage.GPUImageTransformFilter;
 import jp.co.cyberagent.android.gpuimage.GPUImageView;
+import jp.co.cyberagent.android.gpuimage.Rotation;
 import jp.co.cyberagent.android.gpuimage.Sticker;
 import yuku.ambilwarna.AmbilWarnaDialog;
 
@@ -125,13 +123,9 @@ public class DetailActivity extends Activity {
         Matrix matrixSticker = new Matrix();
         matrixSticker.postRotate(angle);
         bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrixSticker,false);
-        matrixSticker.setTranslate(100,100);
-
-        Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);
-        drawable.setBounds(0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight());
-        Sticker newSticker = new Sticker(100,100,matrixSticker,drawable, bitmapSticker.getWidth(),bitmapSticker.getHeight());
-
-        MemeImageView.setSticker(newSticker);
+        matrixSticker.setTranslate(50,50);
+        Sticker newSticker = new Sticker(300f,300f,matrixSticker,bitmapSticker.getWidth(),bitmapSticker.getHeight(),bitmapSticker);
+        gpuImageView.addSticker(newSticker);
     }
 
 
@@ -274,16 +268,17 @@ public class DetailActivity extends Activity {
             }
         });
     }
-    private float angle = 0;
+    private int angle = 0;
     private void getRotateButton() {
         RotateBtn = (ImageView)findViewById(R.id.RotateBtn);
         RotateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 final float[] transform = new float[16];
-                angle = (angle - 90)%360;
+                angle = (angle + 90)%360;
+
                 android.opengl.Matrix.setRotateM(transform, 0, angle, 0, 0, 1.0f);
-                mFilter.setTransform3D(transform);
+               mFilter.setTransform3D(transform);
                 gpuImageView.requestRender();
 
             }
@@ -438,6 +433,7 @@ public class DetailActivity extends Activity {
 
 
         mFilter = new GPUImageTransformFilter();
+       mFilter.setIgnoreAspectRatio(true);
         gpuImageView.setFilter(mFilter);
         gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
         gpuImageView.setImage(bmpImage);

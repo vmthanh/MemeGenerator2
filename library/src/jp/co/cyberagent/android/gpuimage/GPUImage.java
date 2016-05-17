@@ -39,7 +39,11 @@ import android.provider.MediaStore;
 import android.view.Display;
 import android.view.WindowManager;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 
@@ -446,6 +450,12 @@ public class GPUImage {
     public void deleteCaptionText(CaptionText captionTextClicked) {
         mRenderer.deleteCaptionText(captionTextClicked);
     }
+
+    public void addSticker(Sticker sticker) {
+        mRenderer.addSticker(sticker);
+       requestRender();
+    }
+
 
     @Deprecated
     private class SaveTask extends AsyncTask<Void, Void, Void> {

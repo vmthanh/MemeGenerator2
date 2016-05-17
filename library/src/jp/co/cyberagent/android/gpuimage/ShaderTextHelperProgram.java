@@ -3,7 +3,7 @@ package jp.co.cyberagent.android.gpuimage;
 /**
  * Created by CPU10924-local on 5/11/2016.
  */
-public class BatchTextProgram extends GPUTextCaptionFilter {
+public class ShaderTextHelperProgram extends GPUTextCaptionFilter {
     private  static final AttribVariable[] programVariables = {
             AttribVariable.A_Position, AttribVariable.A_TexCoordinate, AttribVariable.A_MVPMatrixIndex
     };

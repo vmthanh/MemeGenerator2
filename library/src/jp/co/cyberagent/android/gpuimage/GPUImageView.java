@@ -358,6 +358,11 @@ public class GPUImageView extends FrameLayout {
         mGLSurfaceView.deleteClickedObject();
     }
 
+    public void addSticker(Sticker sticker) {
+        mGLSurfaceView.addSticker(sticker);
+    }
+
+
     public static class Size {
         int width;
         int height;
@@ -383,6 +388,7 @@ public class GPUImageView extends FrameLayout {
         private int gpuImageGLSurfaceViewWidth;
         private int gpuImageGLSurfaceViewHeight;
         private List<CaptionText> captionTextList = new ArrayList<>();
+        private List<Sticker> stickerList = new ArrayList<>();
         public GPUImageGLSurfaceView(Context context) {
             super(context);
         }
@@ -561,6 +567,11 @@ public class GPUImageView extends FrameLayout {
                 mGPUImage.deleteCaptionText(captionTextClicked);
                 requestRender();
             }
+        }
+
+        public void addSticker(Sticker sticker) {
+            stickerList.add(sticker);
+            mGPUImage.addSticker(sticker);
         }
     }
 
