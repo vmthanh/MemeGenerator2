@@ -362,6 +362,10 @@ public class GPUImageView extends FrameLayout {
         mGLSurfaceView.addSticker(sticker);
     }
 
+    public void setMyRotation(int angle) {
+        mGPUImage.setMyRotation(angle);
+    }
+
 
     public static class Size {
         int width;
@@ -431,13 +435,13 @@ public class GPUImageView extends FrameLayout {
                         stickerClicked = getStickerLocation(event.getX(),event.getY());
                         if (captionTextClicked !=null && stickerClicked !=null)
                         {
-                            if (captionTextClicked.drawOrder > stickerClicked.drawOrder)
+                            /*if (captionTextClicked.drawOrder > stickerClicked.drawOrder)
                             {
                                 stickerClicked = null;
                             }
                             else{
                                 captionTextClicked = null;
-                            }
+                            }*/
                         }
                         if (captionTextClicked == null)
                         {
@@ -467,7 +471,7 @@ public class GPUImageView extends FrameLayout {
                     if (mode == DRAG)
                     {
                         float x = event.getX();
-                        float y = gpuImageGLSurfaceViewHeight -event.getY();
+                        float y = event.getY();
                         moveObject(x,y);
                     }
                     break;
@@ -483,6 +487,7 @@ public class GPUImageView extends FrameLayout {
         private void moveObject(float newX, float newY) {
             if (captionTextClicked != null)
             {
+                newY = gpuImageGLSurfaceViewHeight -newY;
                 float deltaX = newX - initX;
                 float deltaY = newY - initY;
                 int indexCaptionTextClicked = captionTextList.indexOf(captionTextClicked);
@@ -493,13 +498,47 @@ public class GPUImageView extends FrameLayout {
                 updateCaptionText(indexCaptionTextClicked,captionTextClicked);
                 requestRender();
             }
+            if (stickerClicked !=null)
+            {
+                float deltaX = newX - initX;
+                float deltaY = newY - initY;
+                int indexStickerClicked = stickerList.indexOf(stickerClicked);
+                stickerClicked.x +=deltaX;
+                stickerClicked.y +=deltaY;
+                updateSticker(indexStickerClicked,stickerClicked);
+                initX = newX;
+                initY = newY;
+            }
+        }
+
+        private void updateSticker(int indexStickerClicked, Sticker stickerClicked) {
+            mGPUImage.updateSticker(indexStickerClicked,stickerClicked);
         }
 
         private void updateCaptionText(int indexCaptionTextClicked,CaptionText captionTextClicked) {
             mGPUImage.updateCaptionText(indexCaptionTextClicked,captionTextClicked);
         }
 
-        private Sticker getStickerLocation(float x, float y) {
+        private Sticker getStickerLocation(float locX, float locY) {
+            for(int i=stickerList.size()-1;i>=0; --i)
+            {
+                Sticker sticker = stickerList.get(i);
+                float padding = 80;
+                float left = sticker.x;
+                float right = sticker.x + sticker.canvasWidth +padding;
+                float top = sticker.y;
+                float bottom = sticker.y + sticker.canvasHeight +padding;
+                if (top <= locY && locY <= bottom)
+                {
+                    if (left  <= locX && locX <= right)
+                    {
+                        initX = locX;
+                        initY = locY;
+                        return sticker;
+                    }
+                }
+                
+            }
             return null;
         }
         private CaptionText getCaptionTextLocation(float locX, float locY) {
@@ -574,6 +613,8 @@ public class GPUImageView extends FrameLayout {
             mGPUImage.addSticker(sticker);
         }
     }
+
+
 
     private class LoadingView extends FrameLayout {
         public LoadingView(Context context) {

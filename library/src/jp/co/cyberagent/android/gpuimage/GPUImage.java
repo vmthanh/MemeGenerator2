@@ -456,6 +456,15 @@ public class GPUImage {
        requestRender();
     }
 
+    public void updateSticker(int indexStickerClicked, Sticker stickerClicked) {
+        mRenderer.updateSticker(indexStickerClicked,stickerClicked);
+        requestRender();
+    }
+
+    public void setMyRotation(int angle) {
+        mRenderer.setMyRotation(angle);
+    }
+
 
     @Deprecated
     private class SaveTask extends AsyncTask<Void, Void, Void> {

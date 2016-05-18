@@ -93,6 +93,7 @@ public class ImageBacher {
         //   v
         //I want it to be more natural like desktop screen
         Matrix.orthoM(mProjMatrix, 0,-1f, width, height, -1f,  -1f, 1f);
+       // Matrix.orthoM(mProjMatrix,0,0f,width,0f,height,0,100);
     }
 
 
@@ -111,18 +112,20 @@ public class ImageBacher {
         GLES20.glEnableVertexAttribArray(a_Position);
         GLES20.glEnableVertexAttribArray(a_texCoord);
       //  Matrix.multiplyMM(matrixMVP, 0, mProjMatrix, 0, mVMatrix, 0);
-        for(int i=0, textUni = GLES20.GL_TEXTURE0; i<imageSpriteList.size();++i)
+        for(int i=0; i<imageSpriteList.size();++i)
         {
 
 
             ImageSprite imageSprite = imageSpriteList.get(i);
             // Matrix op - start
-           Matrix.setIdentityM(matrixMVP,0);
+            Matrix.setIdentityM(matrixMVP,0);
             Matrix.setIdentityM(modelMatrix, 0);
 
 
             Matrix.translateM(modelMatrix, 0, imageSprite.X,imageSprite.Y, 0f);
             Matrix.scaleM(modelMatrix, 0, imageSprite.getWidth() * imageSprite.XScale, imageSprite.getHeight() * imageSprite.YScale, 0f);
+            Matrix.rotateM(modelMatrix,0,-myRotation,0,0,1.0f);
+
             Log.v("X loc",String.valueOf(imageSprite.X));
             Log.v("Y loc",String.valueOf(imageSprite.Y));
 
@@ -137,17 +140,22 @@ public class ImageBacher {
 
             GLES20.glUniformMatrix4fv(u_MVPMatrix,1,true,matrixMVP,0);
 
-            GLES20.glUniform1i(u_texture,textUni - GLES20.GL_TEXTURE0);
-            GLES20.glActiveTexture(textUni);
+            GLES20.glUniform1i(u_texture,0);
+            GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, imageSprite.getTextureId());
-            textUni++;
+
             GLES20.glDrawElements(GLES20.GL_TRIANGLES, indices.length, GLES20.GL_UNSIGNED_SHORT, indicesBuffer);
 
-            Matrix.setIdentityM(matrixMVP,0);
 
-            GLES20.glUniformMatrix4fv(u_MVPMatrix,1,true,matrixMVP,0);
+            Matrix.setIdentityM(matrixMVP,0);
+            GLES20.glUniformMatrix4fv(u_MVPMatrix,1,false,matrixMVP,0);
 
 
         }
+    }
+    private int myRotation = 0;
+    public void setMyRotation(int rotation)
+    {
+        this.myRotation = rotation;
     }
 }

@@ -426,8 +426,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     private void updateListObjectOnDraw() {
         mRunOnDrawEnd.clear();
-        drawCaptionTextList();
         drawStickerList();
+        drawCaptionTextList();
+
 
     }
 
@@ -500,4 +501,11 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     }
 
 
+    public void updateSticker(int indexStickerClicked, Sticker stickerClicked) {
+        stickerList.set(indexStickerClicked,stickerClicked);
+    }
+
+    public void setMyRotation(int angle) {
+        imageBacher.setMyRotation(angle);
+    }
 }

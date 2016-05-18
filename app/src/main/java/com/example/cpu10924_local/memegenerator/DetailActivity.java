@@ -276,9 +276,9 @@ public class DetailActivity extends Activity {
             public void onClick(View v) {
                 final float[] transform = new float[16];
                 angle = (angle + 90)%360;
-
                 android.opengl.Matrix.setRotateM(transform, 0, angle, 0, 0, 1.0f);
-               mFilter.setTransform3D(transform);
+                gpuImageView.setMyRotation(angle);
+                mFilter.setTransform3D(transform);
                 gpuImageView.requestRender();
 
             }
