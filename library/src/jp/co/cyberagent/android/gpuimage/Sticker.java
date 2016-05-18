@@ -17,8 +17,8 @@ public class Sticker extends ObjectDraw {
     public float mStoreScaleFactor;
     public float canvasWidth;
     public float canvasHeight;
-    public float bitmapWidth;
-    public float bitmapHeigh;
+    public int bitmapWidth;
+    public int bitmapHeigh;
     public Bitmap bitmap;
 
 
@@ -35,5 +35,15 @@ public class Sticker extends ObjectDraw {
         this.canvasHeight = this.bitmapHeigh = bitmapHeigh;
         this.bitmap = bitmap;
 
+    }
+    public Sticker(float x, float y,Bitmap bitmap)
+    {
+        this.x = x;
+        this.y = y;
+        this.bitmap = bitmap;
+        this.mScaleFactor = 1f;
+        this.mStoreScaleFactor = 1f;
+        this.canvasWidth = this.bitmapWidth = bitmap.getWidth();
+        this.canvasHeight = this.bitmapHeigh = bitmap.getHeight();
     }
 }

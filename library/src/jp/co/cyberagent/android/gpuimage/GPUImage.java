@@ -465,6 +465,10 @@ public class GPUImage {
         mRenderer.setMyRotation(angle);
     }
 
+    public void deleteSticker(Sticker stickerClicked) {
+        mRenderer.deleteSticker(stickerClicked);
+    }
+
 
     @Deprecated
     private class SaveTask extends AsyncTask<Void, Void, Void> {

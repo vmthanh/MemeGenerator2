@@ -508,4 +508,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     public void setMyRotation(int angle) {
         imageBacher.setMyRotation(angle);
     }
+
+    public void deleteSticker(Sticker stickerClicked) {
+        stickerList.remove(stickerClicked);
+    }
 }

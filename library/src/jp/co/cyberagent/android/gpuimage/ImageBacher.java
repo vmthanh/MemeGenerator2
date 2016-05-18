@@ -98,7 +98,7 @@ public class ImageBacher {
 
 
     public void drawSticker(Sticker sticker) {
-        ImageSprite  imageSprite = ImageSprite.createGLSprite(sticker.bitmap,sticker.x,sticker.y,sticker.mScaleFactor,sticker.mStoreScaleFactor);
+        ImageSprite  imageSprite = ImageSprite.createGLSprite(sticker);
         imageSpriteList.add(imageSprite);
     }
 
@@ -122,9 +122,17 @@ public class ImageBacher {
             Matrix.setIdentityM(modelMatrix, 0);
 
 
+
+
+            Log.v("Loc X scale:",String.valueOf(imageSprite.X -imageSprite.getWidth()/2));
+            Log.v("Loc Y scale:",String.valueOf(imageSprite.Y -imageSprite.getHeight()/2));
+          //  Matrix.translateM(modelMatrix,0,-imageSprite.getWidth()/2,-imageSprite.getHeight()/2,0f);
             Matrix.translateM(modelMatrix, 0, imageSprite.X,imageSprite.Y, 0f);
-            Matrix.scaleM(modelMatrix, 0, imageSprite.getWidth() * imageSprite.XScale, imageSprite.getHeight() * imageSprite.YScale, 0f);
+            Matrix.scaleM(modelMatrix, 0, imageSprite.getWidth() * imageSprite.getScale(), imageSprite.getHeight() * imageSprite.getScale(), 0f);
+           // Matrix.translateM(modelMatrix,0, imageSprite.getWidth()/2,imageSprite.getHeight()/2,0f);
+
             Matrix.rotateM(modelMatrix,0,-myRotation,0,0,1.0f);
+
 
             Log.v("X loc",String.valueOf(imageSprite.X));
             Log.v("Y loc",String.valueOf(imageSprite.Y));

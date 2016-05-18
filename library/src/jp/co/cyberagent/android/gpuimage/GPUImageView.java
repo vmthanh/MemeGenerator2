@@ -464,8 +464,18 @@ public class GPUImageView extends FrameLayout {
                 case MotionEvent.ACTION_UP:
                 case MotionEvent.ACTION_POINTER_UP:
                     mode = NONE;
+                    oldDist = newDist = 1f;
+                    if (stickerClicked!=null)
+                    {
+                        stickerClicked.mStoreScaleFactor = stickerClicked.mScaleFactor;
+                    }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
+                    oldDist = spacing(event);
+                    if (oldDist > 5f)
+                    {
+                        mode = ZOOM;
+                    }
                     break;
                 case MotionEvent.ACTION_MOVE:
                     if (mode == DRAG)
@@ -473,6 +483,18 @@ public class GPUImageView extends FrameLayout {
                         float x = event.getX();
                         float y = event.getY();
                         moveObject(x,y);
+                    }else if (mode == ZOOM)
+                    {
+                        float temp = spacing(event);
+                        if(temp!=newDist)
+                        {
+                            newDist =temp;
+                            if (Math.abs(newDist - oldDist)>10f)
+                            {
+                                mScaleFactor = (newDist/oldDist);
+                                scaleSticker(mScaleFactor);
+                            }
+                        }
                     }
                     break;
                 default:
@@ -482,6 +504,26 @@ public class GPUImageView extends FrameLayout {
             return true;
         }
 
+        private void scaleSticker(float mScaleFactor) {
+            if (stickerClicked !=null)
+            {
+                stickerClicked.mScaleFactor = mScaleFactor;
+                if (stickerClicked.mStoreScaleFactor != 1f)
+                    stickerClicked.mScaleFactor *=stickerClicked.mStoreScaleFactor;
+                stickerClicked.mScaleFactor = Math.max(0.5f, Math.min(stickerClicked.mScaleFactor, 3.0f));
+                stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmapHeigh;
+                stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmapWidth;
+                int indexStickerClicked = stickerList.indexOf(stickerClicked);
+                updateSticker(indexStickerClicked,stickerClicked);
+            }
+        }
+
+        private float spacing(MotionEvent event) {
+            float x = event.getX(0) - event.getX(1);
+            float y = event.getY(0) - event.getY(1);
+            double res= (double)(x*x) + (double)(y*y);
+            return (float)Math.sqrt(res);
+        }
 
 
         private void moveObject(float newX, float newY) {
@@ -496,7 +538,6 @@ public class GPUImageView extends FrameLayout {
                 initX = newX;
                 initY = newY;
                 updateCaptionText(indexCaptionTextClicked,captionTextClicked);
-                requestRender();
             }
             if (stickerClicked !=null)
             {
@@ -505,9 +546,9 @@ public class GPUImageView extends FrameLayout {
                 int indexStickerClicked = stickerList.indexOf(stickerClicked);
                 stickerClicked.x +=deltaX;
                 stickerClicked.y +=deltaY;
-                updateSticker(indexStickerClicked,stickerClicked);
                 initX = newX;
                 initY = newY;
+                updateSticker(indexStickerClicked,stickerClicked);
             }
         }
 
@@ -598,7 +639,9 @@ public class GPUImageView extends FrameLayout {
         public void deleteClickedObject() {
             if (stickerClicked !=null)
             {
-
+                stickerList.remove(stickerClicked);
+                mGPUImage.deleteSticker(stickerClicked);
+                requestRender();
             }
             if (captionTextClicked !=null)
             {

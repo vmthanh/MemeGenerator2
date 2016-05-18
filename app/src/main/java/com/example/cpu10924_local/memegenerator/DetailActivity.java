@@ -124,7 +124,7 @@ public class DetailActivity extends Activity {
         matrixSticker.postRotate(angle);
         bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrixSticker,false);
         matrixSticker.setTranslate(50,50);
-        Sticker newSticker = new Sticker(300f,300f,matrixSticker,bitmapSticker.getWidth(),bitmapSticker.getHeight(),bitmapSticker);
+        Sticker newSticker = new Sticker(300f,300f,bitmapSticker);
         gpuImageView.addSticker(newSticker);
     }
 

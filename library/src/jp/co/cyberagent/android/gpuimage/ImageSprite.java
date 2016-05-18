@@ -13,33 +13,32 @@ public class ImageSprite {
     private  float scaleFactor;
     public float X;
     public float Y;
-    public float XScale =1.0f;
-    public float YScale = 1.0f;
+
     private int width, height;
     private int textureId = -1;
 
-    private ImageSprite(Bitmap bmp,float x, float y, float scaleFactor, float storeScaleFactor, int textureId)
+    private ImageSprite(Sticker sticker,int textureId)
     {
-        this.width = bmp.getWidth();
-        this.height = bmp.getHeight();
-        this.X = x;
-        this.Y = y;
-        this.scaleFactor = scaleFactor;
-        this.storeScaleFactore = storeScaleFactor;
+        this.width = sticker.bitmapWidth;
+        this.height = sticker.bitmapHeigh;
+        this.X = sticker.x;
+        this.Y = sticker.y;
+        this.scaleFactor = sticker.mScaleFactor;
+        this.storeScaleFactore = sticker.mStoreScaleFactor;
         this.textureId = textureId;
-        this.XScale = this.YScale =1f;
     }
 
 
-    public static ImageSprite createGLSprite(Bitmap bitmap, float x,float y, float scaleFactor,float storeScaleFactor)
+
+    public static ImageSprite createGLSprite(Sticker sticker)
     {
-        ImageSprite imageSprite = new ImageSprite(bitmap, x, y, scaleFactor, storeScaleFactor,createGlTexture());
+        ImageSprite imageSprite = new ImageSprite(sticker,createGlTexture());
         Log.d("G1", "image id = " + imageSprite.getTextureId());
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
 
         // Load the bitmap into the bound texture.
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, sticker.bitmap, 0);
 
 
         return imageSprite;
@@ -67,5 +66,10 @@ public class ImageSprite {
 
     public int getTextureId() {
         return textureId;
+    }
+
+    public float getScale()
+    {
+        return scaleFactor;
     }
 }
