@@ -628,7 +628,7 @@ public class GPUImageView extends FrameLayout {
                     break;
                 //Otherwise, move top
                 default:
-                    captionText.y = gpuImageGLSurfaceViewHeight-bound.height()-15;
+                    captionText.y = gpuImageGLSurfaceViewHeight-bound.height()-40;
                     break;
 
             }

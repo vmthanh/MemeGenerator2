@@ -2,6 +2,7 @@ package com.example.cpu10924_local.memegenerator;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -15,7 +16,9 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -32,6 +35,11 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.util.Random;
 
 import jp.co.cyberagent.android.gpuimage.CaptionText;
 import jp.co.cyberagent.android.gpuimage.GPUImage;
@@ -325,12 +333,29 @@ public class DetailActivity extends Activity {
         });
     }
 
+    GPUImageView.OnPictureSavedListener picSaveListener = new GPUImageView.OnPictureSavedListener() {
+        @Override
+        public void onPictureSaved(Uri uri) {
+            Toast.makeText(getApplicationContext(),"Save imaged GPU",Toast.LENGTH_SHORT).show();
+        }
+    };
     private void getSaveButton() {
        SaveImageButton = (ImageView)findViewById(R.id.SaveImageButton);
         SaveImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-               MemeImageView.saveImage();
+                String fileName = System.currentTimeMillis()+".jpg";
+                try{
+                 gpuImageView.saveToPictures("GPUImage", fileName, new GPUImageView.OnPictureSavedListener() {
+                     @Override
+                     public void onPictureSaved(Uri uri) {
+                         Toast.makeText(getApplicationContext(),"Save GPUImage!",Toast.LENGTH_SHORT).show();
+                     }
+                 });
+                }catch (Exception e)
+                {
+
+                }
             }
         });
     }
@@ -397,7 +422,7 @@ public class DetailActivity extends Activity {
                 return false;
             }
         });
-        MemeEditText.setText(captionTextClicked.content);
+        MemeEditText.setText(captionTextClicked.content.toLowerCase());
         MemeEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -406,7 +431,7 @@ public class DetailActivity extends Activity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                captionTextClicked.content = s.toString();
+                captionTextClicked.content = s.toString().toUpperCase();
                 gpuImageView.requestRender();
 
             }
@@ -421,9 +446,11 @@ public class DetailActivity extends Activity {
 
     private CaptionText captionTextClicked;
 
+
     private void getMemeImageView(Bitmap bitmap,int angle) {
         bmpImage = bitmap;
         gpuImageView = (GPUImageView)findViewById(R.id.surfaceView);
+        gpuImageView.setDrawingCacheEnabled(true);
         if (angle!=0)
         {
             Matrix matrix = new Matrix();
@@ -433,10 +460,11 @@ public class DetailActivity extends Activity {
 
 
         mFilter = new GPUImageTransformFilter();
-       mFilter.setIgnoreAspectRatio(true);
+        mFilter.setIgnoreAspectRatio(true);
         gpuImageView.setFilter(mFilter);
         gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
         gpuImageView.setImage(bmpImage);
+        gpuImageView.setDrawingCacheEnabled(true);
         gpuImageView.setOnTouchGPUImageView(new GPUImageView.GPUImageViewListerner() {
             @Override
             public void onCaptionTextClicked(CaptionText captionText) {

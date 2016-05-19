@@ -11,7 +11,7 @@ public class CaptionText extends ObjectDraw{
     public Paint strokePaint;
     public CaptionText(String content,float x, float y,Paint paint,Paint strokePaint)
     {
-        this.content = content;
+        this.content = content.toUpperCase();
         this.x = x;
         this.y = y;
         this.drawOrder = -1;

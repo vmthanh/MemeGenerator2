@@ -174,8 +174,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
         mFilter.onDraw(mGLTextureId, mGLCubeBuffer, mGLTextureBuffer);
 
-       // drawStickerList();
-        updateListObjectOnDraw();
+        drawStickerList();
+        drawCaptionTextList();
 
         runAll(mRunOnDrawEnd);
         if (mSurfaceTexture != null) {
@@ -420,36 +420,20 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     public void addCaptionText(CaptionText captionText)
     {
         captionTextList.add(captionText);
-        updateListObjectOnDraw();
 
     }
 
-    private void updateListObjectOnDraw() {
-        mRunOnDrawEnd.clear();
-        drawStickerList();
-        drawCaptionTextList();
-
-
-    }
 
     private void drawStickerList() {
         if (stickerList.size()>0)
         {
-            runOnDrawEnd(new Runnable() {
-                @Override
-                public void run() {
-                    imageBacher.begin();
+            imageBacher.begin();
                     for(int i=stickerList.size()-1; i>=0; --i)
                     {
                         final Sticker sticker = stickerList.get(i);
                         imageBacher.drawSticker(sticker);
-
-
                     }
                     imageBacher.end();
-                }
-            });
-
         }
 
 
@@ -460,13 +444,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         for(int i=captionTextList.size()-1; i>=0; --i)
         {
             final CaptionText captionText = captionTextList.get(i);
-            runOnDrawEnd(new Runnable() {
-                @Override
-                public void run() {
-                    drawCaptionText(captionText);
+            drawCaptionText(captionText);
 
-                }
-            });
         }
     }
 
@@ -478,11 +457,26 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         float blue = (float)Color.blue(captionText.paint.getColor())/255;
         float alpha = 1.0f;
 
-        glText.begin(red, green, blue, alpha, mVPMatrix);
-        glText.setScale(captionText.paint.getTextSize()/TEXT_SIZE_STANDART,captionText.paint.getTextSize()/TEXT_SIZE_STANDART);
-        glText.draw(captionText.content, captionText.x, captionText.y, 0);
-
+        //Draw large text in BLACK
+        //All the setting below is hard code setting - There is no way to explain those number
+        //All trie best but not perfect.
+        float scaleLargeText = captionText.paint.getTextSize()*1.16f/TEXT_SIZE_STANDART;
+        glText.begin(0,0,0,alpha,mVPMatrix);
+        glText.setScale(scaleLargeText);
+        glText.setSpace(2f);
+        glText.draw(captionText.content,captionText.x,captionText.y,0);
         glText.end();
+
+        //Draw small text in WHITE
+        float scaleSmallText = captionText.paint.getTextSize()/TEXT_SIZE_STANDART;
+        glText.begin(red, green, blue, alpha, mVPMatrix);
+        glText.setScale(scaleSmallText);
+        float _x = captionText.x + glText.getCharWidth(captionText.content.charAt(0))/8;
+        float _y = captionText.y + glText.getCharWidth(captionText.content.charAt(0))/5;
+        glText.setSpace(9.5f);
+        glText.draw(captionText.content, _x,_y, 0);
+        glText.end();
+
     }
 
     public void updateCaptionText(int indexCaptionTextClicked, CaptionText captionTextClicked) {
@@ -497,9 +491,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     public void addSticker(Sticker sticker) {
         stickerList.add(sticker);
-        updateListObjectOnDraw();
     }
-
 
     public void updateSticker(int indexStickerClicked, Sticker stickerClicked) {
         stickerList.set(indexStickerClicked,stickerClicked);
