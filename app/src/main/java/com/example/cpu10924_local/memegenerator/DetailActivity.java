@@ -467,6 +467,10 @@ public class DetailActivity extends Activity {
             bmpImage = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,false);
         }
 
+        mFilter = new GPUImageTransformFilter();
+        mFilter.setIgnoreAspectRatio(true);
+        gpuImageView.setFilter(mFilter);
+        
         gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
         gpuImageView.setImage(bmpImage);
         gpuImageView.setOnTouchGPUImageView(new GPUImageView.GPUImageViewListerner() {
