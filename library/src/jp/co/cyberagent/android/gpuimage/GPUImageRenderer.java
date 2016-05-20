@@ -344,6 +344,14 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         float ratioWidth = imageWidthNew / outputWidth;
         float ratioHeight = imageHeightNew / outputHeight;
 
+        if (mRotation == Rotation.ROTATION_270 || mRotation ==Rotation.ROTATION_90)
+        {
+            float temp = ratioWidth;
+            ratioWidth = ratioHeight;
+            ratioHeight = temp;
+        }
+
+
         float[] cube = CUBE;
         float[] textureCords = TextureRotationUtil.getRotation(mRotation, mFlipHorizontal, mFlipVertical);
         if (mScaleType == GPUImage.ScaleType.CENTER_CROP) {

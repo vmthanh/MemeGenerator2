@@ -282,12 +282,22 @@ public class DetailActivity extends Activity {
         RotateBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final float[] transform = new float[16];
                 angle = (angle + 90)%360;
-                android.opengl.Matrix.setRotateM(transform, 0, angle, 0, 0, 1.0f);
-                gpuImageView.setMyRotation(angle);
-                mFilter.setTransform3D(transform);
-                gpuImageView.requestRender();
+                switch (angle)
+                {
+                    case 90:
+                        gpuImageView.setRotation(Rotation.ROTATION_90);
+                        break;
+                    case 180:
+                        gpuImageView.setRotation(Rotation.ROTATION_180);
+                        break;
+                    case 270:
+                        gpuImageView.setRotation(Rotation.ROTATION_270);
+                        break;
+                    default:
+                        gpuImageView.setRotation(Rotation.NORMAL);
+                        break;
+                }
 
             }
         });
@@ -450,7 +460,6 @@ public class DetailActivity extends Activity {
     private void getMemeImageView(Bitmap bitmap,int angle) {
         bmpImage = bitmap;
         gpuImageView = (GPUImageView)findViewById(R.id.surfaceView);
-        gpuImageView.setDrawingCacheEnabled(true);
         if (angle!=0)
         {
             Matrix matrix = new Matrix();
@@ -458,13 +467,8 @@ public class DetailActivity extends Activity {
             bmpImage = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,false);
         }
 
-
-        mFilter = new GPUImageTransformFilter();
-        mFilter.setIgnoreAspectRatio(true);
-        gpuImageView.setFilter(mFilter);
         gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
         gpuImageView.setImage(bmpImage);
-        gpuImageView.setDrawingCacheEnabled(true);
         gpuImageView.setOnTouchGPUImageView(new GPUImageView.GPUImageViewListerner() {
             @Override
             public void onCaptionTextClicked(CaptionText captionText) {
