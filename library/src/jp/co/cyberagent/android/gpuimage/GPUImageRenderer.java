@@ -177,6 +177,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         drawStickerList();
         drawCaptionTextList();
 
+
+
         runAll(mRunOnDrawEnd);
         if (mSurfaceTexture != null) {
             mSurfaceTexture.updateTexImage();
@@ -512,4 +514,6 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     public void deleteSticker(Sticker stickerClicked) {
         stickerList.remove(stickerClicked);
     }
+
+
 }

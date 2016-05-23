@@ -432,31 +432,22 @@ public class GPUImageView extends FrameLayout {
                     if (listener!=null)
                     {
                         captionTextClicked = getCaptionTextLocation(event.getX(),gpuImageGLSurfaceViewHeight - event.getY());
-                        stickerClicked = getStickerLocation(event.getX(),event.getY());
-                        if (captionTextClicked !=null && stickerClicked !=null)
+                        if (captionTextClicked !=null)
                         {
-                            /*if (captionTextClicked.drawOrder > stickerClicked.drawOrder)
-                            {
-                                stickerClicked = null;
-                            }
-                            else{
-                                captionTextClicked = null;
-                            }*/
+                            stickerClicked = null;
+                            listener.onCaptionTextClicked(captionTextClicked);
+                            listener.onStickerClicked(null);
                         }
-                        if (captionTextClicked == null)
+                        else if (captionTextClicked == null)
                         {
+                            stickerClicked = getStickerLocation(event.getX(),event.getY());
                             listener.onCaptionTextClicked(null);
-                            //stickerClicked = getStickerLocation(event.getX(),event.getY());
                             if (stickerClicked!=null)
                             {
                                 listener.onStickerClicked(stickerClicked);
-                               // stickerClicked.sendToFront(objectDrawList);
                             }else{
                                 listener.onStickerClicked(null);
                             }
-                        }else{
-                            listener.onCaptionTextClicked(captionTextClicked);
-                           // captionTextClicked.sendToFront(objectDrawList);
                         }
                     }
                     mode = DRAG;
@@ -468,6 +459,10 @@ public class GPUImageView extends FrameLayout {
                     if (stickerClicked!=null)
                     {
                         stickerClicked.mStoreScaleFactor = stickerClicked.mScaleFactor;
+                        storeScaleFactor =  stickerClicked.mStoreScaleFactor;
+                       // stickerClicked = null;
+                       // listener.onStickerClicked(null);
+
                     }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
@@ -478,6 +473,7 @@ public class GPUImageView extends FrameLayout {
                     }
                     break;
                 case MotionEvent.ACTION_MOVE:
+
                     if (mode == DRAG)
                     {
                         float x = event.getX();
@@ -503,7 +499,7 @@ public class GPUImageView extends FrameLayout {
 
             return true;
         }
-
+        private float storeScaleFactor = 1.0f;
         private void scaleSticker(float mScaleFactor) {
             if (stickerClicked !=null)
             {
@@ -511,6 +507,22 @@ public class GPUImageView extends FrameLayout {
                 if (stickerClicked.mStoreScaleFactor != 1f)
                     stickerClicked.mScaleFactor *=stickerClicked.mStoreScaleFactor;
                 stickerClicked.mScaleFactor = Math.max(0.5f, Math.min(stickerClicked.mScaleFactor, 3.0f));
+
+
+                if (stickerClicked.mScaleFactor !=storeScaleFactor)
+                {
+                    if (stickerClicked.mScaleFactor >storeScaleFactor)
+                    {
+                        stickerClicked.x -= stickerClicked.mScaleFactor*2;
+                        stickerClicked.y -= stickerClicked.mScaleFactor*2;
+                    }else if(stickerClicked.mScaleFactor<storeScaleFactor){
+
+                        stickerClicked.x +=stickerClicked.mScaleFactor*2;
+                        stickerClicked.y +=stickerClicked.mScaleFactor*2;
+                    }
+                    storeScaleFactor = stickerClicked.mScaleFactor;
+                }
+
                 stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmapHeigh;
                 stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmapWidth;
                 int indexStickerClicked = stickerList.indexOf(stickerClicked);
@@ -526,7 +538,8 @@ public class GPUImageView extends FrameLayout {
         }
 
 
-        private void moveObject(float newX, float newY) {
+        private void
+        moveObject(float newX, float newY) {
             if (captionTextClicked != null)
             {
                 newY = gpuImageGLSurfaceViewHeight -newY;
@@ -583,8 +596,7 @@ public class GPUImageView extends FrameLayout {
             return null;
         }
         private CaptionText getCaptionTextLocation(float locX, float locY) {
-            Log.v("LocX: ",String.valueOf(locX));
-            Log.v("LocY: ",String.valueOf(locY));
+
             for(int i=captionTextList.size()-1;i>=0; i--)
             {
                 CaptionText captionText = captionTextList.get(i);

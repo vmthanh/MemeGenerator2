@@ -123,18 +123,9 @@ public class ImageBacher {
 
 
 
-
-
-            Matrix.translateM(modelMatrix, 0, imageSprite.X,imageSprite.Y, 0f);
-            Matrix.scaleM(modelMatrix, 0, imageSprite.getWidth() * imageSprite.getScale(), imageSprite.getHeight() * imageSprite.getScale(), 0f);
-
-
             Matrix.rotateM(modelMatrix,0,-myRotation,0,0,1.0f);
-
-
-            Log.v("X loc",String.valueOf(imageSprite.X));
-            Log.v("Y loc",String.valueOf(imageSprite.Y));
-
+            Matrix.translateM(modelMatrix, 0, imageSprite.X ,imageSprite.Y , 0f);
+            Matrix.scaleM(modelMatrix, 0, imageSprite.getWidth()*imageSprite.getScale(), imageSprite.getHeight()*imageSprite.getScale(), 0f);
 
             Matrix.multiplyMM(matrixMVP, 0,modelMatrix, 0, matrixMVP, 0);
             Matrix.multiplyMM(matrixMVP,0,mProjMatrix,0,matrixMVP,0);

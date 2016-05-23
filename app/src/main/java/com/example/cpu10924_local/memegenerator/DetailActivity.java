@@ -480,6 +480,7 @@ public class DetailActivity extends Activity {
                 {
                     TextSetting.setVisibility(View.INVISIBLE);
                     deleteIcon.setVisibility(View.INVISIBLE);
+                    captionTextClicked = null;
                 }
                 else{
                     captionTextClicked = captionText;
@@ -498,7 +499,9 @@ public class DetailActivity extends Activity {
                     deleteIcon.setVisibility(View.VISIBLE);
 
                 }else{
-                    deleteIcon.setVisibility(View.INVISIBLE);
+                    if (captionTextClicked!=null)
+                        deleteIcon.setVisibility(View.VISIBLE);
+                    else deleteIcon.setVisibility(View.INVISIBLE);
                 }
 
             }

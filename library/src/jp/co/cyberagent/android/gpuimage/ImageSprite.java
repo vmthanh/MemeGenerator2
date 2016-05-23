@@ -9,10 +9,12 @@ import android.util.Log;
  * Created by CPU10924-local on 5/13/2016.
  */
 public class ImageSprite {
-    private float storeScaleFactore;
-    private  float scaleFactor;
+    public float storeScaleFactore;
+    public float scaleFactor;
     public float X;
     public float Y;
+    public float canvasWidth;
+    public float canvasHeight;
 
     private int width, height;
     private int textureId = -1;
@@ -26,6 +28,8 @@ public class ImageSprite {
         this.scaleFactor = sticker.mScaleFactor;
         this.storeScaleFactore = sticker.mStoreScaleFactor;
         this.textureId = textureId;
+        this.canvasWidth = sticker.canvasWidth;
+        this.canvasHeight = sticker.canvasHeight;
     }
 
 
