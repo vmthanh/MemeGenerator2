@@ -44,6 +44,14 @@ public class ImageBacher {
     private List<ImageSprite> imageSpriteList = new ArrayList<>();
 
     public void begin() {
+        int[] textureToDelete =new int[1];
+        for(int i=0; i<imageSpriteList.size();++i)
+        {
+            int id = imageSpriteList.get(i).getTextureId();
+            Log.v("Texture id delete:",String.valueOf(id));
+            textureToDelete[0] = imageSpriteList.get(i).getTextureId();
+            GLES20.glDeleteTextures(1,textureToDelete,0);
+        }
         imageSpriteList.clear();
 
     }
