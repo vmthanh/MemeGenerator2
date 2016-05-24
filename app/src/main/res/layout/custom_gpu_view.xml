@@ -48,13 +48,20 @@
         android:visibility="invisible"
         android:layout_below="@+id/TextSetting"
         />
-    <jp.co.cyberagent.android.gpuimage.GPUImageView
-        android:id="@+id/surfaceView"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/deleteIcon"
-        android:layout_above="@+id/actionBtn"
-        />
+        android:layout_above="@+id/actionBtn" >
+        <jp.co.cyberagent.android.gpuimage.GPUImageView
+            android:id="@+id/surfaceView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+
+            />
+    </RelativeLayout>
+
     <LinearLayout
         android:id="@+id/actionBtn"
         android:layout_width="match_parent"

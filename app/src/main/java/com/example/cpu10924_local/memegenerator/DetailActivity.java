@@ -2,7 +2,6 @@ package com.example.cpu10924_local.memegenerator;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -16,9 +15,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -35,11 +32,6 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStream;
-import java.util.Random;
 
 import jp.co.cyberagent.android.gpuimage.CaptionText;
 import jp.co.cyberagent.android.gpuimage.GPUImage;
@@ -283,19 +275,32 @@ public class DetailActivity extends Activity {
             @Override
             public void onClick(View v) {
                 angle = (angle + 90)%360;
+                float ratio;
                 switch (angle)
                 {
                     case 90:
+                        ratio = (float)bmpImage.getHeight()/(float)bmpImage.getWidth();
+
                         gpuImageView.setRotation(Rotation.ROTATION_90);
+                        gpuImageView.setGPUImageViewRatio(ratio);
                         break;
                     case 180:
+                        ratio = (float)bmpImage.getWidth()/(float)bmpImage.getHeight();
+
                         gpuImageView.setRotation(Rotation.ROTATION_180);
+                        gpuImageView.setGPUImageViewRatio(ratio);
                         break;
                     case 270:
+                        ratio = (float)bmpImage.getHeight()/(float)bmpImage.getWidth();
+
                         gpuImageView.setRotation(Rotation.ROTATION_270);
+                        gpuImageView.setGPUImageViewRatio(ratio);
                         break;
                     default:
+                        ratio = (float)bmpImage.getWidth()/(float)bmpImage.getHeight();
+
                         gpuImageView.setRotation(Rotation.NORMAL);
+                        gpuImageView.setGPUImageViewRatio(ratio);
                         break;
                 }
 
@@ -356,6 +361,7 @@ public class DetailActivity extends Activity {
             public void onClick(View v) {
                 String fileName = System.currentTimeMillis()+".jpg";
                 try{
+
                  gpuImageView.saveToPictures("GPUImage", fileName, new GPUImageView.OnPictureSavedListener() {
                      @Override
                      public void onPictureSaved(Uri uri) {
@@ -460,6 +466,7 @@ public class DetailActivity extends Activity {
     private void getMemeImageView(Bitmap bitmap,int angle) {
         bmpImage = bitmap;
         gpuImageView = (GPUImageView)findViewById(R.id.surfaceView);
+
         if (angle!=0)
         {
             Matrix matrix = new Matrix();
@@ -470,9 +477,13 @@ public class DetailActivity extends Activity {
         mFilter = new GPUImageTransformFilter();
         mFilter.setIgnoreAspectRatio(true);
         gpuImageView.setFilter(mFilter);
-        
+
         gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
+        float ratio = (float)bmpImage.getWidth()/(float)bmpImage.getHeight();
+
+        gpuImageView.setGPUImageViewRatio(ratio);
         gpuImageView.setImage(bmpImage);
+
         gpuImageView.setOnTouchGPUImageView(new GPUImageView.GPUImageViewListerner() {
             @Override
             public void onCaptionTextClicked(CaptionText captionText) {

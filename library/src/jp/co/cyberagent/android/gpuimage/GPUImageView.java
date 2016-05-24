@@ -119,6 +119,12 @@ public class GPUImageView extends FrameLayout {
         mGPUImage.deleteImage();
     }
 
+    public void setGPUImageViewRatio(float ratio)
+    {
+        mRatio = ratio;
+        mGLSurfaceView.requestLayout();
+    }
+
     /**
      * Set the scale type of GPUImage.
      *
