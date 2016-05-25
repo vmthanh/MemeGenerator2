@@ -502,28 +502,20 @@ public class GPUImageView extends FrameLayout {
         private void scaleSticker(float mScaleFactor) {
             if (stickerClicked !=null)
             {
+                float focusX = stickerClicked.x + stickerClicked.canvasWidth/2;
+                float focusY = stickerClicked.y + stickerClicked.canvasHeight/2;
+
                 stickerClicked.mScaleFactor = mScaleFactor;
                 if (stickerClicked.mStoreScaleFactor != 1f)
                     stickerClicked.mScaleFactor *=stickerClicked.mStoreScaleFactor;
                 stickerClicked.mScaleFactor = Math.max(0.5f, Math.min(stickerClicked.mScaleFactor, 3.0f));
 
-
-                if (stickerClicked.mScaleFactor !=storeScaleFactor)
-                {
-                    if (stickerClicked.mScaleFactor >storeScaleFactor)
-                    {
-                        stickerClicked.x -= stickerClicked.mScaleFactor*2;
-                        stickerClicked.y -= stickerClicked.mScaleFactor*2;
-                    }else if(stickerClicked.mScaleFactor<storeScaleFactor){
-
-                        stickerClicked.x +=stickerClicked.mScaleFactor*2;
-                        stickerClicked.y +=stickerClicked.mScaleFactor*2;
-                    }
-                    storeScaleFactor = stickerClicked.mScaleFactor;
-                }
-
                 stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmapHeigh;
                 stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmapWidth;
+
+                stickerClicked.x = focusX - stickerClicked.canvasWidth/2;
+                stickerClicked.y = focusY - stickerClicked.canvasHeight/2;
+
                 int indexStickerClicked = stickerList.indexOf(stickerClicked);
                 updateSticker(indexStickerClicked,stickerClicked);
             }
