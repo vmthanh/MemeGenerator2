@@ -141,7 +141,7 @@ public class MyGifView extends View {
                     if (objectDrawList.get(i)instanceof CaptionText)
                     {
                         CaptionText captionText = (CaptionText)objectDrawList.get(i);
-                      //  savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.strokePaint);
+                        savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.strokePaint);
                         savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.paint);
                     }else{
                         Sticker sticker = (Sticker)objectDrawList.get(i);
@@ -189,7 +189,7 @@ public class MyGifView extends View {
                     if (objectDrawList.get(i)instanceof CaptionText)
                     {
                         CaptionText captionText = (CaptionText)objectDrawList.get(i);
-                       // savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.strokePaint);
+                        savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.strokePaint);
                         savedCanvas.drawText(captionText.content.toUpperCase(),captionText.x,captionText.y,captionText.paint);
                     }else{
                         Sticker sticker = (Sticker)objectDrawList.get(i);
@@ -200,7 +200,9 @@ public class MyGifView extends View {
                         savedCanvas.restore();
                     }
                 }
-
+                    /*ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    savedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                    Bitmap decoded = BitmapFactory.decodeStream(new ByteArrayInputStream(out.toByteArray()));*/
                 Bitmap outBmp = Bitmap.createScaledBitmap(savedBitmap,mMovie.width(),mMovie.height(),false);
                 encoder.addFrame(outBmp);
                 encoder.setDelay(this.gifDecoder.getDelay(k));

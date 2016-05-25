@@ -55,17 +55,23 @@ public class GiftImageActivity extends Activity {
         setContentView(R.layout.custom_gif_view);
         Uri videoUri = getIntent().getParcelableExtra("videoUri");
         setGifView(videoUri);
+        loadComponentButton();
+
+    }
+
+    private void loadComponentButton() {
         getFontSpinner();
         TextSetting = (LinearLayout)findViewById(R.id.TextSetting);
         getDeleteButton();
         setAddCaptionText();
         getSticketButton();
-        getSaveImageButton();
+        getSaveGifButton();
     }
 
-    private void getSaveImageButton() {
-        ImageView saveImageButton = (ImageView)findViewById(R.id.SaveImageButton);
-        saveImageButton.setOnClickListener(new View.OnClickListener() {
+
+    private void getSaveGifButton() {
+        ImageView saveGifButton = (ImageView)findViewById(R.id.SaveImageButton);
+        saveGifButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 myGifView.saveGifVideo();
@@ -199,7 +205,7 @@ public class GiftImageActivity extends Activity {
         Drawable drawable = new BitmapDrawable(getResources(),bitmapSticker);
         drawable.setBounds(0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight());
 
-        Sticker newSticker = new Sticker(100,100,matrix,bitmapSticker.getWidth(),bitmapSticker.getHeight(),bitmapSticker);
+        Sticker newSticker = new Sticker(100,100,matrix,bitmapSticker.getWidth(),bitmapSticker.getHeight(),bitmapSticker,drawable);
         myGifView.setSticker(newSticker);
     }
     private int calculateInSampleSize(BitmapFactory.Options options,int Width, int Height)
@@ -281,12 +287,24 @@ public class GiftImageActivity extends Activity {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
                         captionTextClicked.paint.setTextSize(100);
+                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokePaint.setStrokeWidth(20);
+                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     case "Medium":
                         captionTextClicked.paint.setTextSize(200);
+                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokePaint.setStrokeWidth(20);
+                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     case "Large":
                         captionTextClicked.paint.setTextSize(300);
+                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
+                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
+                        captionTextClicked.strokePaint.setStrokeWidth(20);
+                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     default:
 
@@ -377,7 +395,12 @@ public class GiftImageActivity extends Activity {
                 paintText.setTypeface(blockFont);
                 paintText.setAntiAlias(true);
 
-                CaptionText captionText = new CaptionText("Caption", 50, 100, paintText);
+                Paint strokePaint = new Paint(paintText);
+                strokePaint.setStyle(Paint.Style.STROKE);
+                strokePaint.setStrokeWidth(20);
+                strokePaint.setColor(Color.BLACK);
+                strokePaint.setAntiAlias(true);
+                CaptionText captionText = new CaptionText("Caption", 50, 100, paintText, strokePaint);
                 myGifView.addTextCaption(captionText);
             }
         });

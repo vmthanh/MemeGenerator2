@@ -22,7 +22,7 @@ public class Sticker extends ObjectDraw {
     public Bitmap bitmap;
 
 
-    public Sticker( float x, float y,Matrix matrix,int bitmapWidth, int bitmapHeigh, Bitmap bitmap)
+    public Sticker( float x, float y,Matrix matrix,int bitmapWidth, int bitmapHeigh, Bitmap bitmap,Drawable drawable)
     {
 
         this.x = x;
@@ -34,6 +34,7 @@ public class Sticker extends ObjectDraw {
         this.canvasWidth = this.bitmapWidth =bitmapWidth;
         this.canvasHeight = this.bitmapHeigh = bitmapHeigh;
         this.bitmap = bitmap;
+        this.drawable = drawable;
 
     }
     public Sticker(float x, float y,Bitmap bitmap)
