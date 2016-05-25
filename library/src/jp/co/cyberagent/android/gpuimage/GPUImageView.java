@@ -461,7 +461,7 @@ public class GPUImageView extends FrameLayout {
                     if (stickerClicked!=null)
                     {
                         stickerClicked.mStoreScaleFactor = stickerClicked.mScaleFactor;
-                        storeScaleFactor =  stickerClicked.mStoreScaleFactor;
+
                     }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
@@ -498,7 +498,7 @@ public class GPUImageView extends FrameLayout {
 
             return true;
         }
-        private float storeScaleFactor = 1.0f;
+
         private void scaleSticker(float mScaleFactor) {
             if (stickerClicked !=null)
             {
