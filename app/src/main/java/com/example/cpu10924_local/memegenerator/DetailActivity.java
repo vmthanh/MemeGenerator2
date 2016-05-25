@@ -123,7 +123,7 @@ public class DetailActivity extends Activity {
         Matrix matrixSticker = new Matrix();
         matrixSticker.postRotate(angle);
         bitmapSticker = Bitmap.createBitmap(bitmapSticker,0,0,bitmapSticker.getWidth(),bitmapSticker.getHeight(),matrixSticker,false);
-        matrixSticker.setTranslate(50,50);
+        //matrixSticker.setTranslate(50,50);
         Sticker newSticker = new Sticker(300f,300f,bitmapSticker);
         gpuImageView.addSticker(newSticker);
     }
@@ -144,7 +144,6 @@ public class DetailActivity extends Activity {
         protected void onPostExecute(Bitmap bitmap) {
             if (typeLoad == LOAD_IMAGE_VIEW)
             {
-               // bmpImage = bitmap;
                 getMemeImageView(bitmap,angle);
             }else{
                 addMemeSticker(bitmap,angle);
@@ -240,8 +239,13 @@ public class DetailActivity extends Activity {
     {
         Intent sharingIntent = new Intent(Intent.ACTION_SEND);
         sharingIntent.setType("image/jpeg");
-       sharingIntent.putExtra(Intent.EXTRA_STREAM,getImageUri(getApplicationContext(),MemeImageView.getSaveBitmap()));
-        startActivity(Intent.createChooser(sharingIntent, "Share via"));
+        try {
+            sharingIntent.putExtra(Intent.EXTRA_STREAM,getImageUri(getApplicationContext(),gpuImageView.capture()));
+            startActivity(Intent.createChooser(sharingIntent, "Share via"));
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
     public Uri getImageUri(Context inContext, Bitmap inImage) {
         Toast.makeText(getApplicationContext(),"Image is saved",Toast.LENGTH_SHORT).show();
@@ -316,19 +320,12 @@ public class DetailActivity extends Activity {
         AddCaptionBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final Typeface blockFont = Typeface.createFromAsset(getAssets(), "fonts/ufonts.com_impact.ttf");
                 Paint paintText = new Paint();
                 paintText.setColor(Color.WHITE);
                 paintText.setTextSize(100);
-                paintText.setTypeface(blockFont);
                 paintText.setAntiAlias(true);
 
-                Paint strokePaint = new Paint(paintText);
-                strokePaint.setStyle(Paint.Style.STROKE);
-                strokePaint.setStrokeWidth(20);
-                strokePaint.setColor(Color.BLACK);
-                strokePaint.setAntiAlias(true);
-                CaptionText captionText = new CaptionText("Caption", 200, 0, paintText,strokePaint);
+                CaptionText captionText = new CaptionText("Caption", 200, 0, paintText);
                 gpuImageView.addCaptionText(captionText);
 
             }
@@ -348,12 +345,6 @@ public class DetailActivity extends Activity {
         });
     }
 
-    GPUImageView.OnPictureSavedListener picSaveListener = new GPUImageView.OnPictureSavedListener() {
-        @Override
-        public void onPictureSaved(Uri uri) {
-            Toast.makeText(getApplicationContext(),"Save imaged GPU",Toast.LENGTH_SHORT).show();
-        }
-    };
     private void getSaveButton() {
        SaveImageButton = (ImageView)findViewById(R.id.SaveImageButton);
         SaveImageButton.setOnClickListener(new View.OnClickListener() {

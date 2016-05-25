@@ -62,7 +62,7 @@ public class MyView extends View {
                 if (objectDrawList.get(i) instanceof CaptionText)
                 {
                     CaptionText captionText = (CaptionText)objectDrawList.get(i);
-                    savedCanvas.drawText(captionText.content.toUpperCase(), captionText.x, captionText.y, captionText.strokePaint);
+                    //savedCanvas.drawText(captionText.content.toUpperCase(), captionText.x, captionText.y, captionText.strokePaint);
                     savedCanvas.drawText(captionText.content.toUpperCase(), captionText.x, captionText.y, captionText.paint);
 
                 }else{

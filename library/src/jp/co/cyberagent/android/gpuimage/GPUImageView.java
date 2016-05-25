@@ -368,10 +368,6 @@ public class GPUImageView extends FrameLayout {
         mGLSurfaceView.addSticker(sticker);
     }
 
-    public void setMyRotation(int angle) {
-        mGPUImage.setMyRotation(angle);
-    }
-
 
     public static class Size {
         int width;
@@ -466,9 +462,6 @@ public class GPUImageView extends FrameLayout {
                     {
                         stickerClicked.mStoreScaleFactor = stickerClicked.mScaleFactor;
                         storeScaleFactor =  stickerClicked.mStoreScaleFactor;
-                       // stickerClicked = null;
-                       // listener.onStickerClicked(null);
-
                     }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:

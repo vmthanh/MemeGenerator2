@@ -23,7 +23,6 @@ public class ImageBacher {
     // Store the projection matrix. This is used to project the scene onto a 2D viewport.
     private static  float[] mProjMatrix = new float[16];
     private static float[] modelMatrix = new float[16];
-    private static float[] mVMatrix  = new float[16];
     // Allocate storage for the final combined matrix. This will be passed into the shader program.
     private float[] matrixMVP = new float[16];
 
@@ -101,7 +100,6 @@ public class ImageBacher {
         //   v
         //I want it to be more natural like desktop screen
         Matrix.orthoM(mProjMatrix, 0,-1f, width, height, -1f,  -1f, 1f);
-       // Matrix.orthoM(mProjMatrix,0,0f,width,0f,height,0,100);
     }
 
 

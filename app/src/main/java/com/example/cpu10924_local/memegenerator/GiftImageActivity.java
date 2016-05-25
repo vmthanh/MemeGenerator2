@@ -281,24 +281,12 @@ public class GiftImageActivity extends Activity {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
                         captionTextClicked.paint.setTextSize(100);
-                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokePaint.setStrokeWidth(20);
-                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     case "Medium":
                         captionTextClicked.paint.setTextSize(200);
-                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokePaint.setStrokeWidth(20);
-                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     case "Large":
                         captionTextClicked.paint.setTextSize(300);
-                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokePaint.setStrokeWidth(20);
-                        captionTextClicked.strokePaint.setColor(Color.BLACK);
                         break;
                     default:
 
@@ -389,12 +377,7 @@ public class GiftImageActivity extends Activity {
                 paintText.setTypeface(blockFont);
                 paintText.setAntiAlias(true);
 
-                Paint strokePaint = new Paint(paintText);
-                strokePaint.setStyle(Paint.Style.STROKE);
-                strokePaint.setStrokeWidth(20);
-                strokePaint.setColor(Color.BLACK);
-                strokePaint.setAntiAlias(true);
-                CaptionText captionText = new CaptionText("Caption", 50, 100, paintText, strokePaint);
+                CaptionText captionText = new CaptionText("Caption", 50, 100, paintText);
                 myGifView.addTextCaption(captionText);
             }
         });

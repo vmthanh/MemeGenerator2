@@ -153,8 +153,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         Matrix.orthoM(mProjMatrix,0,0f,width,0f,height,0,100);
         Matrix.setLookAtM(mVMatrix,0, 0f, 0f, 1f, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
-       //imageBacher.setScreenDimension(mProjMatrix);
-       imageBacher.setScreenDimension(width,height);
+        imageBacher.setScreenDimension(width,height);
         synchronized (mSurfaceChangedWaiter) {
             mSurfaceChangedWaiter.notifyAll();
         }
@@ -469,11 +468,11 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
         //Draw large text in BLACK
         //All the setting below is hard code setting - There is no way to explain those number
-        //All trie best but not perfect.
-        float scaleLargeText = captionText.paint.getTextSize()*1.16f/TEXT_SIZE_STANDART;
+        //All tries best but not perfect.
+        float scaleLargeText = captionText.paint.getTextSize()*1.15f/TEXT_SIZE_STANDART;
         glText.begin(0,0,0,alpha,mVPMatrix);
         glText.setScale(scaleLargeText);
-        glText.setSpace(2f);
+        glText.setSpace(2.5f);
         glText.draw(captionText.content,captionText.x,captionText.y,0);
         glText.end();
 
@@ -481,8 +480,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         float scaleSmallText = captionText.paint.getTextSize()/TEXT_SIZE_STANDART;
         glText.begin(red, green, blue, alpha, mVPMatrix);
         glText.setScale(scaleSmallText);
-        float _x = captionText.x + glText.getCharWidth(captionText.content.charAt(0))/8;
-        float _y = captionText.y + glText.getCharWidth(captionText.content.charAt(0))/5;
+        float _x = (captionText.content.length()!=0)?captionText.x + glText.getCharWidth(captionText.content.charAt(0))/7.5f:captionText.x;
+        float _y = (captionText.content.length()!=0)?captionText.y + glText.getCharWidth(captionText.content.charAt(0))/5:captionText.y;
         glText.setSpace(9.5f);
         glText.draw(captionText.content, _x,_y, 0);
         glText.end();

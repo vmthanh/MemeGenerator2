@@ -8,14 +8,12 @@ import android.graphics.Paint;
 public class CaptionText extends ObjectDraw{
     public String content;
     public Paint paint;
-    public Paint strokePaint;
-    public CaptionText(String content,float x, float y,Paint paint,Paint strokePaint)
+    public CaptionText(String content,float x, float y,Paint paint)
     {
         this.content = content.toUpperCase();
         this.x = x;
         this.y = y;
         this.drawOrder = -1;
         this.paint = paint;
-        this.strokePaint = strokePaint;
     }
 }
