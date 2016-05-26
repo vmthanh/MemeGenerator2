@@ -39,6 +39,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
@@ -439,6 +440,9 @@ public class GPUImageView extends FrameLayout {
                             stickerClicked = null;
                             listener.onCaptionTextClicked(captionTextClicked);
                             listener.onStickerClicked(null);
+                            captionTextClicked.sendToFrontCaption(captionTextList);
+                            updateCaptionText(captionTextClicked);
+                            Collections.sort(captionTextList,CaptionText.drawOrderComparatorCaption);
                         }
                         else if (captionTextClicked == null)
                         {
@@ -447,6 +451,9 @@ public class GPUImageView extends FrameLayout {
                             if (stickerClicked!=null)
                             {
                                 listener.onStickerClicked(stickerClicked);
+                                stickerClicked.sendToFrontSticker(stickerList);
+                                updateSticker(stickerClicked);
+                                Collections.sort(stickerList,Sticker.drawOrderComparatorSticker);
                             }else{
                                 listener.onStickerClicked(null);
                             }
@@ -517,7 +524,7 @@ public class GPUImageView extends FrameLayout {
                 stickerClicked.y = focusY - stickerClicked.canvasHeight/2;
 
                 int indexStickerClicked = stickerList.indexOf(stickerClicked);
-                updateSticker(indexStickerClicked,stickerClicked);
+                updateSticker(stickerClicked);
             }
         }
 
@@ -536,12 +543,11 @@ public class GPUImageView extends FrameLayout {
                 newY = gpuImageGLSurfaceViewHeight -newY;
                 float deltaX = newX - initX;
                 float deltaY = newY - initY;
-                int indexCaptionTextClicked = captionTextList.indexOf(captionTextClicked);
                 captionTextClicked.x += deltaX;
                 captionTextClicked.y += deltaY;
                 initX = newX;
                 initY = newY;
-                updateCaptionText(indexCaptionTextClicked,captionTextClicked);
+                updateCaptionText(captionTextClicked);
             }
             if (stickerClicked !=null)
             {
@@ -552,16 +558,16 @@ public class GPUImageView extends FrameLayout {
                 stickerClicked.y +=deltaY;
                 initX = newX;
                 initY = newY;
-                updateSticker(indexStickerClicked,stickerClicked);
+                updateSticker(stickerClicked);
             }
         }
 
-        private void updateSticker(int indexStickerClicked, Sticker stickerClicked) {
-            mGPUImage.updateSticker(indexStickerClicked,stickerClicked);
+        private void updateSticker(Sticker stickerClicked) {
+            mGPUImage.updateSticker(stickerClicked);
         }
 
-        private void updateCaptionText(int indexCaptionTextClicked,CaptionText captionTextClicked) {
-            mGPUImage.updateCaptionText(indexCaptionTextClicked,captionTextClicked);
+        private void updateCaptionText(CaptionText captionTextClicked) {
+            mGPUImage.updateCaptionText(captionTextClicked);
         }
 
         private Sticker getStickerLocation(float locX, float locY) {
@@ -637,6 +643,7 @@ public class GPUImageView extends FrameLayout {
             }
             captionTextList.add(captionText);
             mGPUImage.addCaptionText(captionText);
+            Collections.sort(captionTextList,CaptionText.drawOrderComparatorCaption);
         }
 
         public void deleteClickedObject() {
@@ -657,6 +664,7 @@ public class GPUImageView extends FrameLayout {
         public void addSticker(Sticker sticker) {
             stickerList.add(sticker);
             mGPUImage.addSticker(sticker);
+            Collections.sort(stickerList,Sticker.drawOrderComparatorSticker);
         }
     }
 

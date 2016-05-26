@@ -441,8 +441,8 @@ public class GPUImage {
     }
 
 
-    public void updateCaptionText(int indexCaptionTextClicked,CaptionText captionTextClicked) {
-        mRenderer.updateCaptionText(indexCaptionTextClicked,captionTextClicked);
+    public void updateCaptionText(CaptionText captionTextClicked) {
+        mRenderer.updateCaptionText(captionTextClicked);
         requestRender();
 
     }
@@ -456,8 +456,8 @@ public class GPUImage {
        requestRender();
     }
 
-    public void updateSticker(int indexStickerClicked, Sticker stickerClicked) {
-        mRenderer.updateSticker(indexStickerClicked,stickerClicked);
+    public void updateSticker( Sticker stickerClicked) {
+        mRenderer.updateSticker(stickerClicked);
         requestRender();
     }
 

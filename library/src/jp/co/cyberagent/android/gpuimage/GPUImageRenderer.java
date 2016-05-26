@@ -35,6 +35,7 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -434,6 +435,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     {
         captionTextList.add(captionText);
 
+
     }
 
 
@@ -441,7 +443,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         if (stickerList.size()>0)
         {
             imageBacher.begin();
-                    for(int i=stickerList.size()-1; i>=0; --i)
+            Collections.sort(stickerList,Sticker.drawOrderComparatorSticker);
+                    for(int i=0; i<stickerList.size();++i)
                     {
                         final Sticker sticker = stickerList.get(i);
                         imageBacher.drawSticker(sticker);
@@ -452,9 +455,9 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     }
 
-    private void drawCaptionTextList() {
-
-        for(int i=captionTextList.size()-1; i>=0; --i)
+    private void drawCaptionTextList(){
+        Collections.sort(captionTextList,CaptionText.drawOrderComparatorCaption);
+        for(int i=0; i<captionTextList.size(); ++i)
         {
             final CaptionText captionText = captionTextList.get(i);
             drawCaptionText(captionText);
@@ -486,7 +489,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
 
     }
 
-    public void updateCaptionText(int indexCaptionTextClicked, CaptionText captionTextClicked) {
+    public void updateCaptionText(CaptionText captionTextClicked) {
+        int indexCaptionTextClicked = captionTextList.indexOf(captionTextClicked);
         captionTextList.set(indexCaptionTextClicked,captionTextClicked);
     }
 
@@ -500,7 +504,8 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         stickerList.add(sticker);
     }
 
-    public void updateSticker(int indexStickerClicked, Sticker stickerClicked) {
+    public void updateSticker( Sticker stickerClicked) {
+        int indexStickerClicked = stickerList.indexOf(stickerClicked);
         stickerList.set(indexStickerClicked,stickerClicked);
     }
 

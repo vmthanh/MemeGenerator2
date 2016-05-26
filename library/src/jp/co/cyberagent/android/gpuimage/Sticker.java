@@ -4,6 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.drawable.Drawable;
 
+import java.util.Comparator;
+import java.util.List;
+
 import jp.co.cyberagent.android.gpuimage.ObjectDraw;
 
 /**
@@ -46,5 +49,27 @@ public class Sticker extends ObjectDraw {
         this.mStoreScaleFactor = 1f;
         this.canvasWidth = this.bitmapWidth = bitmap.getWidth();
         this.canvasHeight = this.bitmapHeigh = bitmap.getHeight();
+    }
+    public static Comparator<Sticker> drawOrderComparatorSticker;
+    static {
+        drawOrderComparatorSticker = new Comparator<Sticker>() {
+            @Override
+            public int compare(Sticker lhs, Sticker rhs) {
+                return lhs.drawOrder - rhs.drawOrder;
+            }
+        };
+    }
+
+    public void sendToFrontSticker(List<Sticker> stickerList)
+    {
+        int newDrawOrder = 0;
+        for(int i=0; i<stickerList.size(); ++i)
+        {
+            if (stickerList.get(i)!=null && newDrawOrder <=stickerList.get(i).drawOrder)
+            {
+                newDrawOrder = stickerList.get(i).drawOrder +1;
+            }
+        }
+        this.drawOrder = newDrawOrder;
     }
 }
