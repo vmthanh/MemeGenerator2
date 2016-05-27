@@ -119,10 +119,11 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         GLES20.glClearColor(mBackgroundRed, mBackgroundGreen, mBackgroundBlue, 1);
         GLES20.glDisable(GLES20.GL_DEPTH_TEST);
 
-
+        //Load font setting for text.
         glText = new GLText(mContext.getAssets());
         glText.load("ufonts.com_impact.ttf", TEXT_SIZE_STANDART, 2, 2);
 
+        //Load font setting fot stroke.
         glTextStroke = new GLText(mContext.getAssets());
         glTextStroke.loadStroke("ufonts.com_impact.ttf", TEXT_SIZE_STANDART, 2, 2);
         // enable texture + alpha blending
@@ -131,6 +132,7 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         // Set the clear color to black
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1);
         mFilter.init();
+        //Init for render sticker.
         ShaderImageHelper.initGlProgram();
 
     }
@@ -175,13 +177,10 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
         runAll(mRunOnDraw);
 
-
         mFilter.onDraw(mGLTextureId, mGLCubeBuffer, mGLTextureBuffer);
 
         drawStickerList();
         drawCaptionTextList();
-
-
 
         runAll(mRunOnDrawEnd);
         if (mSurfaceTexture != null) {

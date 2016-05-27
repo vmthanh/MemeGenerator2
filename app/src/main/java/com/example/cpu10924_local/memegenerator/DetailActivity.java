@@ -248,7 +248,7 @@ public class DetailActivity extends Activity {
 
     }
     public Uri getImageUri(Context inContext, Bitmap inImage) {
-        Toast.makeText(getApplicationContext(),"Image is saved",Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(),"Save GPUImage!",Toast.LENGTH_SHORT).show();
         String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
         return Uri.parse(path);
     }
@@ -352,7 +352,6 @@ public class DetailActivity extends Activity {
             public void onClick(View v) {
                 String fileName = System.currentTimeMillis()+".jpg";
                 try{
-
                  gpuImageView.saveToPictures("GPUImage", fileName, new GPUImageView.OnPictureSavedListener() {
                      @Override
                      public void onPictureSaved(Uri uri) {
@@ -415,20 +414,11 @@ public class DetailActivity extends Activity {
 
     private void getEditText() {
         MemeEditText = (EditText)findViewById(R.id.MemeEditText);
-        MemeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (actionId== EditorInfo.IME_ACTION_DONE)
-                {
-                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-                    if(imm.isAcceptingText()) { // verify if the soft keyboard is open
-                        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-                    }
-                    return true;
-                }
-                return false;
-            }
-        });
+        openKeyboard();
+        setTextOnKeyboard();
+    }
+
+    private void setTextOnKeyboard() {
         MemeEditText.setText(captionTextClicked.content.toLowerCase());
         MemeEditText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -447,33 +437,28 @@ public class DetailActivity extends Activity {
 
             }
         });
+    }
 
+    private void openKeyboard() {
+        MemeEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId== EditorInfo.IME_ACTION_DONE)
+                {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if(imm.isAcceptingText()) { // verify if the soft keyboard is open
+                        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
     }
 
     private CaptionText captionTextClicked;
-
-
     private void getMemeImageView(Bitmap bitmap,int angle) {
-        bmpImage = bitmap;
-        gpuImageView = (GPUImageView)findViewById(R.id.surfaceView);
-
-        if (angle!=0)
-        {
-            Matrix matrix = new Matrix();
-            matrix.postRotate(angle);
-            bmpImage = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,false);
-        }
-
-        mFilter = new GPUImageTransformFilter();
-        mFilter.setIgnoreAspectRatio(true);
-        gpuImageView.setFilter(mFilter);
-
-        gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
-        float ratio = (float)bmpImage.getWidth()/(float)bmpImage.getHeight();
-
-        gpuImageView.setGPUImageViewRatio(ratio);
-        gpuImageView.setImage(bmpImage);
-
+        setMemeImage(bitmap,angle);
         gpuImageView.setOnTouchGPUImageView(new GPUImageView.GPUImageViewListerner() {
             @Override
             public void onCaptionTextClicked(CaptionText captionText) {
@@ -509,6 +494,26 @@ public class DetailActivity extends Activity {
         });
     }
 
+    private void setMemeImage(Bitmap bitmap, int angle) {
+        bmpImage = bitmap;
+        gpuImageView = (GPUImageView)findViewById(R.id.surfaceView);
+        if (angle!=0)
+        {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(angle);
+            bmpImage = Bitmap.createBitmap(bitmap,0,0,bitmap.getWidth(),bitmap.getHeight(),matrix,false);
+        }
+
+        mFilter = new GPUImageTransformFilter();
+        mFilter.setIgnoreAspectRatio(true);
+        gpuImageView.setFilter(mFilter);
+
+        gpuImageView.setScaleType(GPUImage.ScaleType.CENTER_INSIDE);
+        float ratio = (float)bmpImage.getWidth()/(float)bmpImage.getHeight();
+
+        gpuImageView.setGPUImageViewRatio(ratio);
+        gpuImageView.setImage(bmpImage);
+    }
 
 
     public void addItemOnSpiner() {

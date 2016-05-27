@@ -67,6 +67,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL);
+
+        }
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -74,69 +81,61 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                            android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    // No explanation needed, we can request the permission.
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                            MY_PERMISSIONS_REQUEST_READ_EXTERNAL);
 
-                        // Show an expanation to the user *asynchronously* -- don't block
-                        // this thread waiting for the user's response! After the user
-                        // sees the explanation, try again to request the permission.
+                }else{
+                    View popUpView = getLayoutInflater().inflate(R.layout.popup, null);
+                    mpopup = new PopupWindow(popUpView, ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
+                    mpopup.setAnimationStyle(android.R.style.Animation_Dialog);
 
-                    } else {
+                    mpopup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                    mpopup.setOutsideTouchable(true);
+                    mpopup.showAtLocation(popUpView, Gravity.BOTTOM, 0, 0);
 
-                        // No explanation needed, we can request the permission.
-
-                        ActivityCompat.requestPermissions(MainActivity.this,
-                                new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
-                                MY_PERMISSIONS_REQUEST_READ_EXTERNAL);
-
-                        // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                        // app-defined int constant. The callback method gets the
-                        // result of the request.
-                    }
+                    // Removes default background.
+                    Button ChooseImageBtn = (Button) popUpView.findViewById(R.id.ChooseImageBtn);
+                    ChooseImageBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            getChooseImage();
+                        }
+                    });
+                    Button CameraCaptureBtn = (Button) popUpView.findViewById(R.id.CameraCaptureBtn);
+                    CameraCaptureBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openBackCamera();
+                        }
+                    });
+                    Button LoadGifImageBtn = (Button) popUpView.findViewById(R.id.LoadGifImageBtn);
+                    LoadGifImageBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openGiftImage();
+                        }
+                    });
+                    Button PopupCancle = (Button) popUpView.findViewById(R.id.PopupCancle);
+                    PopupCancle.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            mpopup.dismiss();
+                        }
+                    });
                 }
-                View popUpView = getLayoutInflater().inflate(R.layout.popup, null);
-                mpopup = new PopupWindow(popUpView, ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT, true);
-                mpopup.setAnimationStyle(android.R.style.Animation_Dialog);
 
-                mpopup.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                mpopup.setOutsideTouchable(true);
-                mpopup.showAtLocation(popUpView, Gravity.BOTTOM, 0, 0);
-
-                // Removes default background.
-
-
-                Button ChooseImageBtn = (Button) popUpView.findViewById(R.id.ChooseImageBtn);
-                ChooseImageBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        getChooseImage();
-                    }
-                });
-                Button CameraCaptureBtn = (Button) popUpView.findViewById(R.id.CameraCaptureBtn);
-                CameraCaptureBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        openBackCamera();
-                    }
-                });
-                Button LoadGifImageBtn = (Button) popUpView.findViewById(R.id.LoadGifImageBtn);
-                LoadGifImageBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        openGiftImage();
-                    }
-                });
-                Button PopupCancle = (Button) popUpView.findViewById(R.id.PopupCancle);
-                PopupCancle.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        mpopup.dismiss();
-                    }
-                });
 
             }
         });
 
+        loadView();
+
+
+    }
+
+    private void loadView() {
         memeList = (RecyclerView) findViewById(R.id.meme_list);
         LinearLayoutManager llm = new LinearLayoutManager(getApplicationContext());
         memeList.setLayoutManager(llm);
@@ -154,10 +153,9 @@ public class MainActivity extends AppCompatActivity {
         };
         customListAdapter.setOnItemClickListener(onItemClickListener);
         memeList.setAdapter(customListAdapter);
-
     }
 
-    private  void openGiftImage()
+    private void openGiftImage()
     {
         Intent chooseVideoIntent = new Intent(Intent.ACTION_GET_CONTENT);
         chooseVideoIntent.setType("image/gif");
@@ -184,27 +182,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void loadData() {
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
-            } else {
-
-                // No explanation needed, we can request the permission.
-
-                ActivityCompat.requestPermissions(MainActivity.this,
-                        new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
-                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-        }
         String ExternalStorageDirectoryPath = Environment
                 .getExternalStorageDirectory()
                 .getAbsolutePath();
@@ -213,7 +190,6 @@ public class MainActivity extends AppCompatActivity {
         File targetDirector = new File(targetPath);
         if (targetDirector.listFiles() != null) {
             files = targetDirector.listFiles();
-            Log.v("Files:", String.valueOf(files.length));
         }
     }
 
@@ -284,9 +260,7 @@ public class MainActivity extends AppCompatActivity {
                 if (resultCode == RESULT_OK)
                 {
                     Uri videoUri = data.getData();
-
                     Intent giftImageActivity = new Intent(MainActivity.this,GiftImageActivity.class);
-
                     giftImageActivity.putExtra("videoUri",videoUri);
                     startActivity(giftImageActivity);
                 }
