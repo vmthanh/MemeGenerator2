@@ -467,22 +467,22 @@ public class GPUImageRenderer implements Renderer, PreviewCallback {
     private void drawCaptionText(CaptionText captionText) {
         Matrix.multiplyMM(mVPMatrix, 0, mProjMatrix, 0, mVMatrix, 0);
 
-        float red = (float)Color.red(captionText.paint.getColor())/255;
-        float green = (float)Color.green(captionText.paint.getColor())/255;
-        float blue = (float)Color.blue(captionText.paint.getColor())/255;
+        float red = (float)Color.red(captionText.getPaint().getColor())/255;
+        float green = (float)Color.green(captionText.getPaint().getColor())/255;
+        float blue = (float)Color.blue(captionText.getPaint().getColor())/255;
         float alpha = 1.0f;
 
         //Draw stroke first
-        float scaleLargeText = captionText.paint.getTextSize()/TEXT_SIZE_STANDART;
+        float scaleLargeText = captionText.getPaint().getTextSize()/TEXT_SIZE_STANDART;
         glTextStroke.begin(0,0,0,alpha,mVPMatrix);
         glTextStroke.setScale(scaleLargeText);
-        glTextStroke.draw(captionText.content,captionText.x,captionText.y,0);
+        glTextStroke.draw(captionText.getContent(), captionText.getX(), captionText.getY(),0);
         glTextStroke.end();
 
         //Draw text then
         glText.begin(red, green, blue, alpha, mVPMatrix);
         glText.setScale(scaleLargeText);
-        glText.draw(captionText.content,captionText.x,captionText.y,0);
+        glText.draw(captionText.getContent(), captionText.getX(), captionText.getY(),0);
         glText.end();
 
 

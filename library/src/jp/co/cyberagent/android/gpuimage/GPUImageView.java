@@ -27,7 +27,6 @@ import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.*;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
@@ -467,7 +466,7 @@ public class GPUImageView extends FrameLayout {
                     oldDist = newDist = 1f;
                     if (stickerClicked!=null)
                     {
-                        stickerClicked.mStoreScaleFactor = stickerClicked.mScaleFactor;
+                        stickerClicked.setmStoreScaleFactor(stickerClicked.getmScaleFactor());
 
                     }
                     break;
@@ -509,19 +508,19 @@ public class GPUImageView extends FrameLayout {
         private void scaleSticker(float mScaleFactor) {
             if (stickerClicked !=null)
             {
-                float focusX = stickerClicked.x + stickerClicked.canvasWidth/2;
-                float focusY = stickerClicked.y + stickerClicked.canvasHeight/2;
+                float focusX = stickerClicked.getX() + stickerClicked.getCanvasWidth() /2;
+                float focusY = stickerClicked.getY() + stickerClicked.getCanvasHeight() /2;
 
-                stickerClicked.mScaleFactor = mScaleFactor;
-                if (stickerClicked.mStoreScaleFactor != 1f)
-                    stickerClicked.mScaleFactor *=stickerClicked.mStoreScaleFactor;
-                stickerClicked.mScaleFactor = Math.max(0.5f, Math.min(stickerClicked.mScaleFactor, 3.0f));
+                stickerClicked.setmScaleFactor(mScaleFactor);
+                if (stickerClicked.getmStoreScaleFactor() != 1f)
+                    stickerClicked.setmScaleFactor(stickerClicked.getmScaleFactor() * stickerClicked.getmStoreScaleFactor());
+                stickerClicked.setmScaleFactor(Math.max(0.5f, Math.min(stickerClicked.getmScaleFactor(), 3.0f)));
 
-                stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmapHeigh;
-                stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmapWidth;
+                stickerClicked.setCanvasHeight(stickerClicked.getmScaleFactor() * stickerClicked.getBitmapHeigh());
+                stickerClicked.setCanvasWidth(stickerClicked.getmScaleFactor() * stickerClicked.getBitmapWidth());
 
-                stickerClicked.x = focusX - stickerClicked.canvasWidth/2;
-                stickerClicked.y = focusY - stickerClicked.canvasHeight/2;
+                stickerClicked.setX(focusX - stickerClicked.getCanvasWidth() /2);
+                stickerClicked.setY(focusY - stickerClicked.getCanvasHeight() /2);
 
                 int indexStickerClicked = stickerList.indexOf(stickerClicked);
                 updateSticker(stickerClicked);
@@ -543,8 +542,8 @@ public class GPUImageView extends FrameLayout {
                 newY = gpuImageGLSurfaceViewHeight -newY;
                 float deltaX = newX - initX;
                 float deltaY = newY - initY;
-                captionTextClicked.x += deltaX;
-                captionTextClicked.y += deltaY;
+                captionTextClicked.setX(captionTextClicked.getX() + deltaX);
+                captionTextClicked.setY(captionTextClicked.getY() + deltaY);
                 initX = newX;
                 initY = newY;
                 updateCaptionText(captionTextClicked);
@@ -554,8 +553,8 @@ public class GPUImageView extends FrameLayout {
                 float deltaX = newX - initX;
                 float deltaY = newY - initY;
                 int indexStickerClicked = stickerList.indexOf(stickerClicked);
-                stickerClicked.x +=deltaX;
-                stickerClicked.y +=deltaY;
+                stickerClicked.setX(stickerClicked.getX() + deltaX);
+                stickerClicked.setY(stickerClicked.getY() + deltaY);
                 initX = newX;
                 initY = newY;
                 updateSticker(stickerClicked);
@@ -575,10 +574,10 @@ public class GPUImageView extends FrameLayout {
             {
                 Sticker sticker = stickerList.get(i);
                 float padding = 80;
-                float left = sticker.x;
-                float right = sticker.x + sticker.canvasWidth +padding;
-                float top = sticker.y;
-                float bottom = sticker.y + sticker.canvasHeight +padding;
+                float left = sticker.getX();
+                float right = sticker.getX() + sticker.getCanvasWidth() +padding;
+                float top = sticker.getY();
+                float bottom = sticker.getY() + sticker.getCanvasHeight() +padding;
                 if (top <= locY && locY <= bottom)
                 {
                     if (left  <= locX && locX <= right)
@@ -598,12 +597,12 @@ public class GPUImageView extends FrameLayout {
             {
                 CaptionText captionText = captionTextList.get(i);
                 Rect bound = new Rect();
-                captionText.paint.getTextBounds(captionText.content,0,captionText.content.length(),bound);
+                captionText.getPaint().getTextBounds(captionText.getContent(),0, captionText.getContent().length(),bound);
                 float padding = 50;
-                float left = captionText.x -padding;
-                float top = captionText.y- bound.height()-padding;
-                float right = captionText.x + bound.width() +2*padding;
-                float bottom = captionText.y + bound.height() ;
+                float left = captionText.getX() -padding;
+                float top = captionText.getY() - bound.height()-padding;
+                float right = captionText.getX() + bound.width() +2*padding;
+                float bottom = captionText.getY() + bound.height() ;
 
                 if (top <= locY && locY <=bottom)
                 {
@@ -622,22 +621,22 @@ public class GPUImageView extends FrameLayout {
         {
 
             Rect bound = new Rect();
-            captionText.paint.getTextBounds(captionText.content,0,captionText.content.length(),bound);
+            captionText.getPaint().getTextBounds(captionText.getContent(),0, captionText.getContent().length(),bound);
             //Move text to center
-            captionText.x = gpuImageGLSurfaceViewWidth /2 -bound.width()/2;
+            captionText.setX(gpuImageGLSurfaceViewWidth /2 -bound.width()/2);
             switch (captionTextList.size())
             {
                 //Move text to bottom
                 case 1:
-                    captionText.y = 0;
+                    captionText.setY(0);
                     break;
                 //Move text to middle
                 case 2:
-                    captionText.y = gpuImageGLSurfaceViewHeight/2 - bound.height();
+                    captionText.setY(gpuImageGLSurfaceViewHeight/2 - bound.height());
                     break;
                 //Otherwise, move top
                 default:
-                    captionText.y = gpuImageGLSurfaceViewHeight-bound.height()-40;
+                    captionText.setY(gpuImageGLSurfaceViewHeight-bound.height()-40);
                     break;
 
             }

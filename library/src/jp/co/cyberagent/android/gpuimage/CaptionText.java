@@ -9,16 +9,16 @@ import java.util.List;
  * Created by CPU10924-local on 3/30/2016.
  */
 public class CaptionText extends ObjectDraw{
-    public String content;
-    public Paint paint;
-    public Paint strokePaint;
+    private String content;
+    private Paint paint;
+    private Paint strokePaint;
 
     public CaptionText(String content,float x, float y, Paint paint)
     {
         this.content = content.toUpperCase();
-        this.x = x;
-        this.y = y;
-        this.drawOrder = -1;
+        this.setX(x);
+        this.setY(y);
+        this.setDrawOrder(-1);
         this.paint = paint;
     }
     public static Comparator<CaptionText> drawOrderComparatorCaption;
@@ -34,20 +34,44 @@ public class CaptionText extends ObjectDraw{
         int newDrawOrder = 0;
         for(int i=0; i<captionTextList.size(); ++i)
         {
-            if (captionTextList.get(i)!=null && newDrawOrder <=captionTextList.get(i).drawOrder)
+            if (captionTextList.get(i)!=null && newDrawOrder <= captionTextList.get(i).getDrawOrder())
             {
-                newDrawOrder = captionTextList.get(i).drawOrder +1;
+                newDrawOrder = captionTextList.get(i).getDrawOrder() +1;
             }
         }
-        this.drawOrder = newDrawOrder;
+        this.setDrawOrder(newDrawOrder);
     }
 
     static {
         drawOrderComparatorCaption = new Comparator<CaptionText>() {
             @Override
             public int compare(CaptionText lhs, CaptionText rhs) {
-                return lhs.drawOrder - rhs.drawOrder;
+                return lhs.getDrawOrder() - rhs.getDrawOrder();
             }
         };
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public Paint getPaint() {
+        return paint;
+    }
+
+    public void setPaint(Paint paint) {
+        this.paint = paint;
+    }
+
+    public Paint getStrokePaint() {
+        return strokePaint;
+    }
+
+    public void setStrokePaint(Paint strokePaint) {
+        this.strokePaint = strokePaint;
     }
 }

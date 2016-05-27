@@ -7,31 +7,29 @@ import android.graphics.drawable.Drawable;
 import java.util.Comparator;
 import java.util.List;
 
-import jp.co.cyberagent.android.gpuimage.ObjectDraw;
-
 /**
  * Created by ThanhVo on 3/31/2016.
  */
 public class Sticker extends ObjectDraw {
 
-    public Matrix matrix;
-    public Drawable drawable;
-    public float mScaleFactor;
-    public float mStoreScaleFactor;
-    public float canvasWidth;
-    public float canvasHeight;
-    public int bitmapWidth;
-    public int bitmapHeigh;
-    public Bitmap bitmap;
+    private Matrix matrix;
+    private Drawable drawable;
+    private float mScaleFactor;
+    private float mStoreScaleFactor;
+    private float canvasWidth;
+    private float canvasHeight;
+    private int bitmapWidth;
+    private int bitmapHeigh;
+    private Bitmap bitmap;
 
 
     public Sticker( float x, float y,Matrix matrix,int bitmapWidth, int bitmapHeigh, Bitmap bitmap,Drawable drawable)
     {
 
-        this.x = x;
-        this.y = y;
-        this.drawOrder = -1;
-        this.matrix = matrix;
+        this.setX(x);
+        this.setY(y);
+        this.setDrawOrder(-1);
+        this.matrix= matrix;
         this.mScaleFactor = 1f;
         this.mStoreScaleFactor = 1f;
         this.canvasWidth = this.bitmapWidth =bitmapWidth;
@@ -42,10 +40,10 @@ public class Sticker extends ObjectDraw {
     }
     public Sticker(float x, float y,Bitmap bitmap)
     {
-        this.x = x;
-        this.y = y;
+        this.setX(x);
+        this.setY(y);
         this.bitmap = bitmap;
-        this.mScaleFactor = 1f;
+        this.mScaleFactor =1f;
         this.mStoreScaleFactor = 1f;
         this.canvasWidth = this.bitmapWidth = bitmap.getWidth();
         this.canvasHeight = this.bitmapHeigh = bitmap.getHeight();
@@ -55,7 +53,7 @@ public class Sticker extends ObjectDraw {
         drawOrderComparatorSticker = new Comparator<Sticker>() {
             @Override
             public int compare(Sticker lhs, Sticker rhs) {
-                return lhs.drawOrder - rhs.drawOrder;
+                return lhs.getDrawOrder() - rhs.getDrawOrder();
             }
         };
     }
@@ -65,11 +63,83 @@ public class Sticker extends ObjectDraw {
         int newDrawOrder = 0;
         for(int i=0; i<stickerList.size(); ++i)
         {
-            if (stickerList.get(i)!=null && newDrawOrder <=stickerList.get(i).drawOrder)
+            if (stickerList.get(i)!=null && newDrawOrder <= stickerList.get(i).getDrawOrder())
             {
-                newDrawOrder = stickerList.get(i).drawOrder +1;
+                newDrawOrder = stickerList.get(i).getDrawOrder() +1;
             }
         }
-        this.drawOrder = newDrawOrder;
+        this.setDrawOrder(newDrawOrder);
+    }
+
+    public Matrix getMatrix() {
+        return matrix;
+    }
+
+    public void setMatrix(Matrix matrix) {
+        this.matrix = matrix;
+    }
+
+    public Drawable getDrawable() {
+        return drawable;
+    }
+
+    public void setDrawable(Drawable drawable) {
+        this.drawable = drawable;
+    }
+
+    public float getmScaleFactor() {
+        return mScaleFactor;
+    }
+
+    public void setmScaleFactor(float mScaleFactor) {
+        this.mScaleFactor = mScaleFactor;
+    }
+
+    public float getmStoreScaleFactor() {
+        return mStoreScaleFactor;
+    }
+
+    public void setmStoreScaleFactor(float mStoreScaleFactor) {
+        this.mStoreScaleFactor = mStoreScaleFactor;
+    }
+
+    public float getCanvasWidth() {
+        return canvasWidth;
+    }
+
+    public void setCanvasWidth(float canvasWidth) {
+        this.canvasWidth = canvasWidth;
+    }
+
+    public float getCanvasHeight() {
+        return canvasHeight;
+    }
+
+    public void setCanvasHeight(float canvasHeight) {
+        this.canvasHeight = canvasHeight;
+    }
+
+    public int getBitmapWidth() {
+        return bitmapWidth;
+    }
+
+    public void setBitmapWidth(int bitmapWidth) {
+        this.bitmapWidth = bitmapWidth;
+    }
+
+    public int getBitmapHeigh() {
+        return bitmapHeigh;
+    }
+
+    public void setBitmapHeigh(int bitmapHeigh) {
+        this.bitmapHeigh = bitmapHeigh;
+    }
+
+    public Bitmap getBitmap() {
+        return bitmap;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
     }
 }

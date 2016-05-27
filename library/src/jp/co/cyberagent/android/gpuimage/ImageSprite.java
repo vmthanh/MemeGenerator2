@@ -1,6 +1,5 @@
 package jp.co.cyberagent.android.gpuimage;
 
-import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.util.Log;
@@ -9,29 +8,32 @@ import android.util.Log;
  * Created by CPU10924-local on 5/13/2016.
  */
 public class ImageSprite {
-    public float storeScaleFactore;
-    public float scaleFactor;
-    public float X;
-    public float Y;
-    public float canvasWidth;
-    public float canvasHeight;
+    private float scaleFactor;
+    private float X;
+    private float Y;
 
     private int width, height;
     private int textureId = -1;
 
     private ImageSprite(Sticker sticker,int textureId)
     {
-        this.width = sticker.bitmapWidth;
-        this.height = sticker.bitmapHeigh;
-        this.X = sticker.x;
-        this.Y = sticker.y;
-        this.scaleFactor = sticker.mScaleFactor;
-        this.storeScaleFactore = sticker.mStoreScaleFactor;
+        this.width = sticker.getBitmapWidth();
+        this.height = sticker.getBitmapHeigh();
+        this.X = sticker.getX();
+        this.Y = sticker.getY();
+        this.scaleFactor = sticker.getmScaleFactor();
         this.textureId = textureId;
-        this.canvasWidth = sticker.canvasWidth;
-        this.canvasHeight = sticker.canvasHeight;
     }
 
+    public float getX()
+    {
+        return X;
+    }
+
+    public float getY()
+    {
+        return Y;
+    }
 
 
     public static ImageSprite createGLSprite(Sticker sticker)
@@ -42,7 +44,7 @@ public class ImageSprite {
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
 
         // Load the bitmap into the bound texture.
-        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, sticker.bitmap, 0);
+        GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, sticker.getBitmap(), 0);
 
 
         return imageSprite;

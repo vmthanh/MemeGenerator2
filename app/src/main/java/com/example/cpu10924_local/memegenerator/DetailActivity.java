@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Typeface;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -380,7 +379,8 @@ public class DetailActivity extends Activity {
 
                     @Override
                     public void onOk(AmbilWarnaDialog dialog, int color) {
-                        captionTextClicked.paint.setColor(color);
+                        Paint paint = captionTextClicked.getPaint();
+                        paint.setColor(color);
                         gpuImageView.requestRender();
                     }
                 });
@@ -419,7 +419,8 @@ public class DetailActivity extends Activity {
     }
 
     private void setTextOnKeyboard() {
-        MemeEditText.setText(captionTextClicked.content.toLowerCase());
+        String content = captionTextClicked.getContent();
+        MemeEditText.setText(content.toLowerCase());
         MemeEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -427,7 +428,8 @@ public class DetailActivity extends Activity {
             }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {captionTextClicked.content = s.toString().toUpperCase();
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                captionTextClicked.setContent(s.toString().toUpperCase());
                 gpuImageView.requestRender();
 
             }
@@ -523,13 +525,13 @@ public class DetailActivity extends Activity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
-                        captionTextClicked.paint.setTextSize(100);
+                        captionTextClicked.getPaint().setTextSize(100);
                         break;
                     case "Medium":
-                        captionTextClicked.paint.setTextSize(200);
+                        captionTextClicked.getPaint().setTextSize(200);
                         break;
                     case "Large":
-                        captionTextClicked.paint.setTextSize(300);
+                        captionTextClicked.getPaint().setTextSize(300);
                         break;
                     default:
                         break;
@@ -549,7 +551,7 @@ public class DetailActivity extends Activity {
     }
 
     private void getCurrentItemValue() {
-        switch ((int)captionTextClicked.paint.getTextSize())
+        switch ((int) captionTextClicked.getPaint().getTextSize())
         {
             case 100:
                 FontSpinner.setSelection(0);

@@ -7,9 +7,9 @@ import java.util.List;
  * Created by CPU10924-local on 4/14/2016.
  */
 public class ObjectDraw {
-    public float x;
-    public float y;
-    public int drawOrder;
+    private float x;
+    private float y;
+    private int drawOrder;
     public static Comparator<ObjectDraw> drawOrderComparator;
     public void sendToFront(List<ObjectDraw> objectDrawArrayList)
     {
@@ -31,4 +31,27 @@ public class ObjectDraw {
         };
     }
 
+    public float getX() {
+        return x;
+    }
+
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
+    public int getDrawOrder() {
+        return drawOrder;
+    }
+
+    public void setDrawOrder(int drawOrder) {
+        this.drawOrder = drawOrder;
+    }
 }

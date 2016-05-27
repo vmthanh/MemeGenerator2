@@ -31,7 +31,7 @@ public class MyView extends View {
     private Matrix matrix;
     private Matrix imageViewMatrix;
     private List<CaptionText> captionTextList = new ArrayList<CaptionText>();
-    public List<ObjectDraw> objectDrawList = new ArrayList<>();
+    private List<ObjectDraw> objectDrawList = new ArrayList<>();
     private float initX;
     private float initY;
     private int imageViewWidth;
@@ -63,14 +63,14 @@ public class MyView extends View {
                 {
                     CaptionText captionText = (CaptionText)objectDrawList.get(i);
                     //savedCanvas.drawText(captionText.content.toUpperCase(), captionText.x, captionText.y, captionText.strokePaint);
-                    savedCanvas.drawText(captionText.content.toUpperCase(), captionText.x, captionText.y, captionText.paint);
+                    savedCanvas.drawText(captionText.getContent().toUpperCase(), captionText.getX(), captionText.getY(), captionText.getPaint());
 
                 }else{
                     Sticker sticker = (Sticker)objectDrawList.get(i);
                     savedCanvas.save();
-                    savedCanvas.setMatrix(sticker.matrix);
-                    savedCanvas.scale(sticker.mScaleFactor,sticker.mScaleFactor,sticker.bitmapWidth/2, sticker.bitmapHeigh/2);
-                    sticker.drawable.draw(savedCanvas);
+                    savedCanvas.setMatrix(sticker.getMatrix());
+                    savedCanvas.scale(sticker.getmScaleFactor(), sticker.getmScaleFactor(), sticker.getBitmapWidth() /2, sticker.getBitmapHeigh() /2);
+                    sticker.getDrawable().draw(savedCanvas);
                     savedCanvas.restore();
                 }
             }
@@ -118,7 +118,7 @@ public class MyView extends View {
                         stickerClicked = getInitStickerLocation(event.getX(),event.getY());
                         if (captionTextClicked !=null && stickerClicked !=null)
                         {
-                            if (captionTextClicked.drawOrder > stickerClicked.drawOrder)
+                            if (captionTextClicked.getDrawOrder() > stickerClicked.getDrawOrder())
                             {
                                 stickerClicked = null;
                             }
@@ -150,7 +150,7 @@ public class MyView extends View {
                     oldDist = newDist = 1f;
                     if (stickerClicked!=null)
                     {
-                        stickerClicked.mStoreScaleFactor = stickerClicked.mScaleFactor;
+                        stickerClicked.setmStoreScaleFactor(stickerClicked.getmScaleFactor());
                     }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
@@ -300,18 +300,18 @@ public class MyView extends View {
     {
 
         Rect bound = new Rect();
-        textCaption.paint.getTextBounds(textCaption.content,0,textCaption.content.length(),bound);
+        textCaption.getPaint().getTextBounds(textCaption.getContent(),0, textCaption.getContent().length(),bound);
         //Move text to center
-        textCaption.x = imageViewWidth /2 -bound.width()/2;
+        textCaption.setX(imageViewWidth /2 -bound.width()/2);
         switch (captionTextList.size())
         {
             //Move text to bottom
             case 1:
-                textCaption.y = imageViewHeight;
+                textCaption.setY(imageViewHeight);
                 break;
             //Move text to middle
             case 2:
-                textCaption.y = imageViewHeight/2 - bound.height()/2;
+                textCaption.setY(imageViewHeight/2 - bound.height()/2);
                 break;
             //Otherwise, move up
             default:
@@ -343,12 +343,12 @@ public class MyView extends View {
             {
                 CaptionText captionText = (CaptionText)objectDrawList.get(i);
                 Rect bound = new Rect();
-                captionText.paint.getTextBounds(captionText.content,0,captionText.content.length(),bound);
+                captionText.getPaint().getTextBounds(captionText.getContent(),0, captionText.getContent().length(),bound);
                 float padding = 50;
-                float left = captionText.x -padding;
-                float top = captionText.y- bound.height()-padding;
-                float right = captionText.x + bound.width() +2*padding;
-                float bottom = captionText.y  ;
+                float left = captionText.getX() -padding;
+                float top = captionText.getY() - bound.height()-padding;
+                float right = captionText.getX() + bound.width() +2*padding;
+                float bottom = captionText.getY();
 
                 if (top <= locY && locY <=bottom)
                 {
@@ -376,10 +376,10 @@ public class MyView extends View {
                 Sticker sticker = (Sticker) objectDrawList.get(i);
 
                 float padding = 80;
-                float left = sticker.x;
-                float right = sticker.x + sticker.canvasWidth +padding;
-                float top = sticker.y;
-                float bottom = sticker.y + sticker.canvasHeight +padding;
+                float left = sticker.getX();
+                float right = sticker.getX() + sticker.getCanvasWidth() +padding;
+                float top = sticker.getY();
+                float bottom = sticker.getY() + sticker.getCanvasHeight() +padding;
                 if (top <= locY && locY <= bottom)
                 {
                     if (left  <= locX && locX <= right)
@@ -401,8 +401,8 @@ public class MyView extends View {
         {
             float deltaX = newX - initX;
             float deltaY = newY - initY;
-            captionTextClicked.x +=deltaX;
-            captionTextClicked.y +=deltaY;
+            captionTextClicked.setX(captionTextClicked.getX() + deltaX);
+            captionTextClicked.setY(captionTextClicked.getY() + deltaY);
             initX = newX;
             initY = newY;
         }
@@ -410,9 +410,9 @@ public class MyView extends View {
         {
             float deltaX = newX - initX;
             float deltaY = newY - initY;
-            stickerClicked.x +=deltaX;
-            stickerClicked.y +=deltaY;
-            stickerClicked.matrix.postTranslate(deltaX,deltaY);
+            stickerClicked.setX(stickerClicked.getX() + deltaX);
+            stickerClicked.setY(stickerClicked.getY() + deltaY);
+            stickerClicked.getMatrix().postTranslate(deltaX,deltaY);
             initX = newX;
             initY = newY;
         }
@@ -425,12 +425,12 @@ public class MyView extends View {
 
         if (stickerClicked != null)
         {
-                stickerClicked.mScaleFactor = mScaleFactor;
-                if (stickerClicked.mStoreScaleFactor != 1f)
-                      stickerClicked.mScaleFactor *=stickerClicked.mStoreScaleFactor;
-                stickerClicked.mScaleFactor = Math.max(0.5f, Math.min(stickerClicked.mScaleFactor, 3.0f));
-                stickerClicked.canvasHeight =  stickerClicked.mScaleFactor*stickerClicked.bitmapHeigh;
-                stickerClicked.canvasWidth =  stickerClicked.mScaleFactor*stickerClicked.bitmapWidth;
+                stickerClicked.setmScaleFactor(mScaleFactor);
+                if (stickerClicked.getmStoreScaleFactor() != 1f)
+                      stickerClicked.setmScaleFactor(stickerClicked.getmScaleFactor() * stickerClicked.getmStoreScaleFactor());
+                stickerClicked.setmScaleFactor(Math.max(0.5f, Math.min(stickerClicked.getmScaleFactor(), 3.0f)));
+                stickerClicked.setCanvasHeight(stickerClicked.getmScaleFactor() * stickerClicked.getBitmapHeigh());
+                stickerClicked.setCanvasWidth(stickerClicked.getmScaleFactor() * stickerClicked.getBitmapWidth());
 
         }
     }

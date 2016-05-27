@@ -267,7 +267,7 @@ public class GiftImageActivity extends Activity {
 
     private void addItemOnSpiner()
     {
-        switch ((int)captionTextClicked.paint.getTextSize())
+        switch ((int) captionTextClicked.getPaint().getTextSize())
         {
             case 100:
                 FontSpinner.setSelection(0);
@@ -286,25 +286,25 @@ public class GiftImageActivity extends Activity {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 switch (String.valueOf(parent.getItemAtPosition(position))) {
                     case "Small":
-                        captionTextClicked.paint.setTextSize(100);
-                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokePaint.setStrokeWidth(20);
-                        captionTextClicked.strokePaint.setColor(Color.BLACK);
+                        captionTextClicked.getPaint().setTextSize(100);
+                        captionTextClicked.setStrokePaint(new Paint(captionTextClicked.getPaint()));
+                        captionTextClicked.getStrokePaint().setStyle(Paint.Style.STROKE);
+                        captionTextClicked.getStrokePaint().setStrokeWidth(20);
+                        captionTextClicked.getStrokePaint().setColor(Color.BLACK);
                         break;
                     case "Medium":
-                        captionTextClicked.paint.setTextSize(200);
-                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokePaint.setStrokeWidth(20);
-                        captionTextClicked.strokePaint.setColor(Color.BLACK);
+                        captionTextClicked.getPaint().setTextSize(200);
+                        captionTextClicked.setStrokePaint(new Paint(captionTextClicked.getPaint()));
+                        captionTextClicked.getStrokePaint().setStyle(Paint.Style.STROKE);
+                        captionTextClicked.getStrokePaint().setStrokeWidth(20);
+                        captionTextClicked.getStrokePaint().setColor(Color.BLACK);
                         break;
                     case "Large":
-                        captionTextClicked.paint.setTextSize(300);
-                        captionTextClicked.strokePaint = new Paint(captionTextClicked.paint);
-                        captionTextClicked.strokePaint.setStyle(Paint.Style.STROKE);
-                        captionTextClicked.strokePaint.setStrokeWidth(20);
-                        captionTextClicked.strokePaint.setColor(Color.BLACK);
+                        captionTextClicked.getPaint().setTextSize(300);
+                        captionTextClicked.setStrokePaint(new Paint(captionTextClicked.getPaint()));
+                        captionTextClicked.getStrokePaint().setStyle(Paint.Style.STROKE);
+                        captionTextClicked.getStrokePaint().setStrokeWidth(20);
+                        captionTextClicked.getStrokePaint().setColor(Color.BLACK);
                         break;
                     default:
 
@@ -336,7 +336,7 @@ public class GiftImageActivity extends Activity {
 
                     @Override
                     public void onOk(AmbilWarnaDialog dialog, int color) {
-                        captionTextClicked.paint.setColor(color);
+                        captionTextClicked.getPaint().setColor(color);
                         myGifView.invalidate();
                     }
                 });
@@ -362,7 +362,7 @@ public class GiftImageActivity extends Activity {
                 return false;
             }
         });
-        MemeEditText.setText(captionTextClicked.content);
+        MemeEditText.setText(captionTextClicked.getContent());
         MemeEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -371,7 +371,7 @@ public class GiftImageActivity extends Activity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                captionTextClicked.content = s.toString();
+                captionTextClicked.setContent(s.toString());
                 myGifView.invalidate();
             }
 

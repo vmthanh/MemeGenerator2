@@ -130,7 +130,7 @@ public class ImageBacher {
 
 
             Matrix.rotateM(modelMatrix,0,-myRotation,0,0,1.0f);
-            Matrix.translateM(modelMatrix, 0, imageSprite.X ,imageSprite.Y , 0f);
+            Matrix.translateM(modelMatrix, 0, imageSprite.getX() ,imageSprite.getY() , 0f);
             Matrix.scaleM(modelMatrix, 0, imageSprite.getWidth()*imageSprite.getScale(), imageSprite.getHeight()*imageSprite.getScale(), 0f);
 
             Matrix.multiplyMM(matrixMVP, 0,modelMatrix, 0, matrixMVP, 0);
