@@ -1,0 +1,2 @@
+# MemeGenerator
+I develop a app taking a picture or gif image and allow user to inserts or draws sticker on it. The app was inspired by functionality on Snapchat and other Meme Generator App. The main difference is that I took a different perspective in technical where all the images and filters are handled directly in GPU and pitxel level. So, the application could work smoothly with large image and give a better performance. 
